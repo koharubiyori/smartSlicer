@@ -1,0 +1,134 @@
+// 弹性布局
+.flex-row {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  box-sizing: border-box;
+}
+
+.flex-row-inline {
+  flex-direction: row;
+  box-sizing: border-box;
+  display: inline-flex;
+}
+
+.flex-column {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.flex-column-inline {
+  flex-direction: column;
+  box-sizing: border-box;
+  display: inline-flex;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-cross-center {
+  align-items: center;
+}
+
+.flex-cross-start {
+  align-items: flex-start;
+}
+
+.flex-cross-end {
+  align-items: flex-end;
+}
+
+.flex-main-center {
+  justify-content: center;
+}
+
+.flex-main-start {
+  justify-content: flex-start;
+}
+
+.flex-main-end {
+  justify-content: flex-end;
+}
+
+.flex-around {
+  justify-content: space-around;
+}
+
+.flex-between {
+  justify-content: space-between;
+}
+
+.flex-evenly {
+  justify-content: space-evenly;
+}
+
+.flex-children-center {
+  align-content: center;
+}
+
+.flex-children-around {
+  align-content: space-around;
+}
+
+.flex-children-between {
+  align-content: space-between;
+}
+
+.flex {
+  flex: 1;
+}
+
+.flex2 {
+  flex: 2;
+}
+
+.flex3 {
+  flex: 3;
+}
+
+.flex-limit {
+  flex: 1;
+  overflow: hidden;
+}
+
+.flex2-limit {
+  flex: 2;
+  overflow: hidden;
+}
+
+.flex3-limit {
+  flex: 3;
+  overflow: hidden;
+}
+
+.flex-shrink {
+  flex-shrink: 1;
+}
+
+.flex-oneline {
+  flex-basis: 100%;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-scroll {
+  overflow: auto;
+}
+
+.flex-self-start {
+  align-self: flex-start;
+}
+
+.flex-self-center {
+  align-self: center;
+}
+
+.flex-self-end {
+  align-self: flex-end;
+}

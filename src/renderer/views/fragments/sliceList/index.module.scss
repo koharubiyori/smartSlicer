@@ -1,0 +1,18 @@
+.hideUnderline {
+  &::before, &::after {
+    display: none;
+  }
+
+  :global {
+    .MuiInputBase-input {
+      padding-bottom: 0;
+      padding-left: 5px;
+    }
+  }
+}
+
+.speakerSelected {
+  &[data-selected="true"] {
+    background-color: color-mix(in srgb, var(--primary) 25%, transparent);
+  }
+}
