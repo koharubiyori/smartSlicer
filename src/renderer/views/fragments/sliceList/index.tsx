@@ -18,6 +18,7 @@ export interface Props {
 
 function SliceListFragment(props: PropsWithChildren<Props>) {
   const flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef = useRef(false)
+  const tableContainerEl = useRef<HTMLElement>()
   const tableBodyElRef = useRef<HTMLElement>()
 
   // 切换说话人筛选时自动滚动到之前保存的选定说话人的可见位置
@@ -42,9 +43,13 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
   ), [])
 
   function scrollIntoViewForActiveSlice() {
-    tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')?.scrollIntoView({
-      block: 'center'
+    const selectedItem = tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')
+    selectedItem?.scrollIntoView({
+      block: store.speakers.lastMovement === 'next' ? 'start' : 'end'
     })
+
+    store.speakers.lastMovement === 'next' &&
+      tableContainerEl.current?.scrollTo({ top: tableContainerEl.current!.scrollTop - 34 })
   }
 
   function isItemSelected(item: VideoSlice, index: number) {
@@ -58,6 +63,7 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
 
   return (
     <TableContainer
+      ref={tableContainerEl as any}
       component={Paper}
       style={{ marginTop: 10, height: 'calc(100% - 10px)', overflowY: 'auto' }}
     >

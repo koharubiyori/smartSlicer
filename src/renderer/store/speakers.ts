@@ -9,6 +9,7 @@ class SpeakersStore {
   positionOfSpeakerLists: Record<string, number> = {
     [SpeakerSelects.All]: 0
   }
+  lastMovement: 'next' | 'back' | null = null
 
   get sliceListOfSelectedSpeaker() {
     if (this.selectedSpeaker === SpeakerSelects.All) return store.main.sliceList ?? []
@@ -42,11 +43,15 @@ class SpeakersStore {
   next() {
     if (this.currentSelectedPosition < this.sliceListOfSelectedSpeaker.length - 1) {
       this.positionOfSpeakerLists[this.selectedSpeaker] = this.currentSelectedPosition + 1
+      this.lastMovement = 'next'
     }
   }
 
   back() {
-    if (this.currentSelectedPosition !== 0) this.positionOfSpeakerLists[this.selectedSpeaker]--
+    if (this.currentSelectedPosition !== 0) {
+      this.positionOfSpeakerLists[this.selectedSpeaker]--
+      this.lastMovement = 'back'
+    }
   }
 
   emit(newValue: VideoSlice) {
