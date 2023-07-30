@@ -77,9 +77,11 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
   async function removeVideoSample(speakerId: string, sampleFileName: string) {
     const result = await dialogIpcClient.showMessageBox({
       title: '提示',
+      type: 'question',
       message: '确定要删除这条样本？',
       buttons: ['确定', '取消'],
-      defaultId: 0
+      defaultId: 0,
+      noLink: true,
     })
 
     if (result.response === 1) { return }
@@ -92,9 +94,11 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
   async function removeSpeaker(speakerId: string) {
     const result = await dialogIpcClient.showMessageBox({
       title: '提示',
+      type: 'question',
       message: '确定要删除这个说话人？',
       buttons: ['确定', '取消'],
-      defaultId: 0
+      defaultId: 0,
+      noLink: true,
     })
 
     if (result.response === 1) { return }
