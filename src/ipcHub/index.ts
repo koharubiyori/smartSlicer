@@ -11,6 +11,6 @@ export default function initIpcHub(mainWindow: BrowserWindow) {
     dialogIpc,
     appIpc,
     pythonIpc,
-    ffmpegIpc
+    ffmpegIpc,
   ].forEach(item => item.initIpcChannel(mainWindow))
 }

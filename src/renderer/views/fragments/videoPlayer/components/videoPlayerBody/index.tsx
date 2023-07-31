@@ -1,4 +1,4 @@
-import React, { MutableRefObject, PropsWithChildren, useEffect, useRef, useState } from 'react'
+import React, { MutableRefObject, PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import classes from './index.module.scss'
 import dayjs from 'dayjs'
 import SlowMotionVideoIcon from '@mui/icons-material/SlowMotionVideo'
@@ -18,6 +18,7 @@ export interface Props {
   videoSlice?: VideoSlice
   videoSliceDirPath?: string
   onEmit(videoSlice: VideoSlice): void
+  onUpdateCutRange(videoSlice: VideoSlice): void
   onDrop(): void
   onNext(): void
   onBack(): void
@@ -56,6 +57,15 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
     pause: () => videoElRef.current?.pause()
   }
 
+  // --- start --- 这里主要为了解决自动筛选时，videoSlice对象文件位置没变但因实例改变，发生重渲染，触发onCanplay钩子等逻辑，要检测props.videoSlice变化的地方都应该用这个变量代替
+  const [isVideoSliceFilePathChanged, setIsVideoSliceFilePathChanged] = useState(false)
+  const prevVideoSliceProps = useRef(props.videoSlice)
+  useEffect(() => {
+    setIsVideoSliceFilePathChanged(props.videoSlice?.filePath !== prevVideoSliceProps.current?.filePath)
+    prevVideoSliceProps.current = props.videoSlice
+  }, [props.videoSlice])
+  // --- end ---
+
   useEffect(() => {
     const unsubscribers = [
       addEventListener(document.body, 'keydown', (e) => {
@@ -81,7 +91,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
     ]
 
     return () => unsubscribers.forEach(item => item())
-  }, [props.videoSlice])
+  }, [isVideoSliceFilePathChanged])
 
   useEffect(() => {
     return addEventListener(document.body, 'keydown', e => {
@@ -94,7 +104,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
         modified: true,
       })
     })
-  }, [props.videoSlice, props.keyBindings])
+  }, [isVideoSliceFilePathChanged, props.keyBindings])
 
   // 实现滚动条游标拖动
   useEffect(() => {
@@ -136,7 +146,6 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
           e.stopPropagation()
           activeCut = el
           setIsVideoCutMoving(true)
-          videoElRef.current?.pause()
         }, true)
       ),
       addEventListener(document.body, 'mouseup', e => {
@@ -179,7 +188,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
       setVideoTime(0)
       setCutRange(props.videoSlice.cutRange ?? [0, null])
     }
-  }, [props.videoSlice])
+  }, [isVideoSliceFilePathChanged])
 
   // 使用requestAnimationFrame手动实现video标签的timeUpdate事件，解决其触发频率低的问题
   useEffect(() => {
@@ -195,6 +204,22 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
 
     return () => void(cancelFlag = true)
   }, [isVideoPlaying])
+
+
+  const debouncedUpdateCutRange = useMemo(() => {
+    return _.debounce(() => {
+      props.onUpdateCutRange({
+        ...(props.videoSlice as any),
+        cutRange: getTrueCutRange(),
+        modified: true,
+      })
+    }, 300, { trailing: true })
+  }, [isVideoSliceFilePathChanged])
+
+  useEffect(() => {
+    if (!props.videoSlice) { return }
+    debouncedUpdateCutRange()
+  }, [isVideoSliceFilePathChanged, cutRange])
 
   function getTrueCutRange(): [number, number] {
     let minValue = cutRangeRef.current[0]
@@ -268,15 +293,6 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
   const trueCutRange = getTrueCutRange()
 
   const scaleModeList = ['contain', 'cover', 'fill']
-
-  // --- start --- 这里主要为了解决自动筛选时，videoSlice对象文件地址没变但因实例改变，发生重渲染，触发onCanplay钩子内的逻辑，导致自动筛选中视频自动播放的问题
-  const [isVideoSliceFilePathChanged, setIsVideoSliceFilePathChanged] = useState(false)
-  const prevVideoSliceProps = useRef(props.videoSlice)
-  useEffect(() => {
-    setIsVideoSliceFilePathChanged(props.videoSlice?.filePath !== prevVideoSliceProps.current?.filePath)
-    prevVideoSliceProps.current = props.videoSlice
-  }, [props.videoSlice])
-  // --- end ---
 
   const fullVideoPath = props.videoSliceDirPath && props.videoSlice?.filePath ?
     path.join(props.videoSliceDirPath, props.videoSlice.filePath) : undefined

@@ -1,6 +1,8 @@
 import { SupportedLanguages } from 'ipcHub/modules/python/utils/callWhisper'
 import { makeAutoObservable } from "mobx"
+import path from 'path'
 import appSettingsPrefs from '~/prefs/appSettingsPrefs'
+import { projectFileName, saveProjectFile } from '~/views/fragments/operationPanel/utils/loadSlices'
 
 class MainStore {
   videoInputPath: string = ''
@@ -28,20 +30,21 @@ class MainStore {
     this.appSettings[name] = value
     appSettingsPrefs[name] = value
   }
+
+  saveCurrentSliceList() {
+    saveProjectFile(this.slicesPath, this.sliceList!)
+  }
 }
 
 export default MainStore
 
 export class VideoSlice {
-  speaker: string | null = null
-  filePath: string
-  cutRange: [number, number] | null = null
-  modified = false
-
-  constructor(filePath: string, speaker: string | null = null) {
-    this.filePath = filePath
-    this.speaker = speaker
-  }
+  constructor(
+    public filePath: string,
+    public speaker: string | null = null,
+    public cutRange: [number, number] | null = null,
+    public modified = false
+  ) {}
 }
 
 export type AppSettings = MainStore['appSettings']

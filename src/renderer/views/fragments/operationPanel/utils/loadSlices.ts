@@ -10,7 +10,7 @@ export async function loadSlices(slicesPath: string): Promise<LoadSlicesResult> 
   try {
     const rawFilePaths = await fsPromise.readFile(path.join(slicesPath, projectFileName), 'utf8')
     return {
-      slices: JSON.parse(rawFilePaths).map((item: SliceJsonObject) => new VideoSlice(item.filePath, item.speaker)),
+      slices: JSON.parse(rawFilePaths),
       source: 'json'
     }
   } catch(e) {
@@ -35,16 +35,11 @@ export async function loadSlices(slicesPath: string): Promise<LoadSlicesResult> 
 }
 
 export function saveProjectFile(slicesPath: string, slices: VideoSlice[]) {
-  const projectFileContent = JSON.stringify(slices.map<SliceJsonObject>(item => ({ filePath: item.filePath, speaker: item.speaker })))
+  const projectFileContent = JSON.stringify(slices)
   return fsPromise.writeFile(path.join(slicesPath, projectFileName), projectFileContent)
 }
 
 export interface LoadSlicesResult {
   slices: VideoSlice[]
   source: 'files' | 'json'
-}
-
-interface SliceJsonObject {
-  filePath: string
-  speaker: string | null
 }

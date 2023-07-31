@@ -108,7 +108,7 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
                     flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = true
                   }}
                 >
-                  <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{path.basename(item.filePath)}</TableCell>
+                  <TableCell align="center" style={{ color: 'var(--text-secondary)', maxWidth: 100 }}>{item.filePath}</TableCell>
                   <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.speaker ?? '未指定'}</TableCell>
                 </TableRow>
               )}

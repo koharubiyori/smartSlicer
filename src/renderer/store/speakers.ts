@@ -57,6 +57,7 @@ class SpeakersStore {
   emit(newValue: VideoSlice) {
     const foundIndex = store.main.sliceList!.findIndex(item => item.filePath === newValue.filePath)
     store.main.sliceList![foundIndex] = newValue
+    store.main.saveCurrentSliceList()
   }
 
   emitAndNext(newValue: VideoSlice) {
