@@ -1,18 +1,19 @@
-import React, { MutableRefObject, PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import classes from './index.module.scss'
-import dayjs from 'dayjs'
-import SlowMotionVideoIcon from '@mui/icons-material/SlowMotionVideo'
-import LoopIcon from '@mui/icons-material/Loop'
 import FitScreenIcon from '@mui/icons-material/FitScreen'
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
-import { IconButton, Menu, MenuItem } from '@mui/material'
-import useStateWithRef from '~/hooks/useStateWithRef'
-import _ from 'lodash'
-import { VideoSlice } from '~/store/main'
+import LoopIcon from '@mui/icons-material/Loop'
 import MovieIcon from '@mui/icons-material/Movie'
-import { addEventListener } from '~/utils/utils'
-import { defaultSpeakerShowName } from '~/store/speakers'
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
+import SlowMotionVideoIcon from '@mui/icons-material/SlowMotionVideo'
+import HelpIcon from '@mui/icons-material/Help'
+import { IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/material'
+import dayjs from 'dayjs'
+import _ from 'lodash'
 import path from 'path'
+import { MutableRefObject, PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
+import useStateWithRef from '~/hooks/useStateWithRef'
+import { VideoSlice } from '~/store/main'
+import { defaultSpeakerShowName } from '~/store/speakers'
+import { addEventListener } from '~/utils/utils'
+import classes from './index.module.scss'
 
 export interface Props {
   videoSlice?: VideoSlice
@@ -327,6 +328,24 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
         <div className="playMask" onClick={play} data-visible={!isVideoPlaying && !isVideoCursorMoving}>
           <PlayCircleOutlineIcon sx={{ fontSize: 120, fill: '#eee' }} />
         </div>
+        <Tooltip placement="left"
+          title={<div className={classes.helpTip}>
+            <ul>
+              <li>【方向键↑】：标记当前切片为“默认说话人”</li>
+              <li>【方向键↓】：移除当前切片标记</li>
+              <li>【方向键←】：切片列表后退</li>
+              <li>【方向键←】：切片列表前进</li>
+              <li>【空格】：重播当前切片</li>
+            </ul>
+          </div>}
+        >
+          <IconButton
+            style={{ position: 'absolute', top: 0, right: 0 }}
+            sx={{ marginRight: '5px' }}
+          >
+            <HelpIcon sx={{ fontSize: 26, color: 'white' }} />
+          </IconButton>
+        </Tooltip>
         <div className="progressBar">
           <div className="operations flex-row flex-between flex-cross-center">
             <div className="times">{formatTime(videoTime)} / {formatTime(videoDuration)} ({uncut ? '未剪辑' : `${formatTime(trueCutRange[0])} ~ ${formatTime(trueCutRange[1] ?? videoDuration)}`})</div>

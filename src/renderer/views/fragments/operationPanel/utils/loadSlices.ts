@@ -15,7 +15,7 @@ export async function loadSlices(slicesPath: string): Promise<LoadSlicesResult> 
     }
   } catch(e) {
     const allExts = supportedVideoExtList.concat(supportedAudioExtList)
-    const globPattern = `**/*.{${allExts.join(',')}}`
+    const globPattern = `*.{${allExts.join(',')}}`
     const filePaths = await glob(globPattern, { cwd: slicesPath })
 
     filePaths.sort((a, b) => {
