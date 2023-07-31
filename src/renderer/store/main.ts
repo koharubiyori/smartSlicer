@@ -8,11 +8,13 @@ class MainStore {
   slicesPath: string = ''
   outputPath: string = ''
 
+
   sliceList: VideoSlice[] | null = null
 
   appSettings = {
     useGpu: true,
     outputAudioOnly: false,
+    ffmpegWorkingNum: 2,
     languageForGenerateSubtitle: 'zh' as SupportedLanguages,
   }
 

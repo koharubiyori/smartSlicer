@@ -3,7 +3,6 @@ import path from 'path'
 import ffmpeg from 'fluent-ffmpeg'
 import createIpcChannel from '../createIpcChannel'
 import { getGpuList } from '../../ipcHub/utils/utils'
-import { FFMPEG_TIME_FORMAT } from '../../constants'
 
 export const ffmpegIpc = createIpcChannel('ffmpeg', {
   async slice(options: FFmpegSliceOptions)  {

@@ -1,4 +1,4 @@
-import { FormControlLabel, FormGroup, MenuItem, Paper, Select, Switch, Typography } from '@mui/material'
+import { FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Paper, Select, Switch, Typography } from '@mui/material'
 import Grid from '@mui/material/Unstable_Grid2'
 import { supportedLanguageMaps } from 'ipcHub/modules/python/utils/callWhisper'
 import { Observer } from 'mobx-react-lite'
@@ -16,7 +16,7 @@ function SettingsFragment(props: PropsWithChildren<Props>) {
     <Paper className="flex-column" style={{ boxSizing: 'border-box', padding: '10px 20px' }}>
       <FormGroup>
         <Observer>{() => <>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} alignItems="center">
             {/* <Grid xs={6}>
               <FormControlLabel
                 control={<Switch
@@ -26,7 +26,7 @@ function SettingsFragment(props: PropsWithChildren<Props>) {
                 label={<Typography style={{ color: 'var(--text-secondary)' }}>GPU加速</Typography>}
               />
             </Grid> */}
-            <Grid xs={12}>
+            <Grid xs={7}>
               <FormControlLabel
                 control={<Switch
                   checked={store.main.appSettings.outputAudioOnly}
@@ -34,6 +34,20 @@ function SettingsFragment(props: PropsWithChildren<Props>) {
                 />}
                 label={<Typography style={{ color: 'var(--text-secondary)' }}>最终只输出音频</Typography>}
               />
+            </Grid>
+            <Grid xs={5}>
+              <FormControl fullWidth>
+                <InputLabel>ffmpeg工作进程数</InputLabel>
+                <Select
+                  value={store.main.appSettings.ffmpegWorkingNum}
+                  color="primary"
+                  size="small"
+                  label="ffmpeg工作进程数"
+                  onChange={e => store.main.updateAppSetting('ffmpegWorkingNum', parseInt(e.target.value as string))}
+                >
+                  {new Array(6).fill(0).map((_, i) => <MenuItem value={i + 1}>{i + 1}</MenuItem>)}
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
           {/* <Grid xs={12}>

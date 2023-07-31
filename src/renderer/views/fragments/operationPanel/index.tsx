@@ -12,13 +12,15 @@ import { VideoSlice } from '~/store/main'
 import { globalBackdropRef } from '~/utils/globalBackdrop'
 import { notify } from '~/utils/notify'
 import parseTimeRangesFromSubtitle from '~/utils/parseTimeRangesFromSubtitle'
-import { getBaseFirstName, supportedAudioExtList, supportedVideoExtList } from '~/utils/utils'
+import { getBaseFirstName } from '~/utils/utils'
 import DialogOfAutoFilter from './components/dialogOfAutoFilter'
 import DialogOfSpeakerManagement from './components/dialogOfSpeakerManagement'
 import DialogOfSubtitleGenerate, { DialogOfSubtitleGenerateRef } from './components/dialogOfSubtitleGenerate'
 import DialogOfVideoSlice, { Props as DialogPropsOfVideoSlice } from './components/dialogOfVideoSlice'
 import dayjs from 'dayjs'
-import { FFMPEG_TIME_FORMAT } from '~/../constants'
+import { FFMPEG_TIME_FORMAT, supportedAudioExtList, supportedVideoExtList } from '~/../constants'
+import { loadSlices as execLoadSlices, saveProjectFile } from './utils/loadSlices'
+import Bottleneck from 'bottleneck'
 
 export interface Props {
 
@@ -118,73 +120,64 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
       const fileContent = await fsPromise.readFile(store.main.subtitleInputPath, 'utf-8')
       const result = parseTimeRangesFromSubtitle(fileContent, path.extname(store.main.subtitleInputPath).replace('.', '') as any)
 
-      let cancelFlag = false
+      const limiter = new Bottleneck({
+        maxConcurrent: store.main.appSettings.ffmpegWorkingNum,
+        rejectOnDrop: false
+      })
+      result.forEach(async (item, index) => {
+        limiter.schedule({ id: (index + 1).toString() }, async () => {
+          await ffmpegIpcClient.slice({
+            originalFilePath: store.main.videoInputPath,
+            startTime: item[0],
+            endTime: item[1],
+            outputDirPath: store.main.slicesPath,
+            outputFileName: (index + 1).toString(),
+            useGpu: store.main.appSettings.useGpu,
+          })
+
+          setVideoSliceDialogParams(prevVal => ({ ...prevVal, completedNumber: prevVal.completedNumber + 1 }))
+        })
+      })
+
+      limiter.on('failed', (error, jobInfo) => {
+        if (jobInfo.retryCount < 3) {
+          notify.warning('切片任务出错，准备重试：' + jobInfo.options.id)
+          return 25
+        } else {
+          notify.error('切片任务失败：' + jobInfo.options.id)
+        }
+      })
+
+      limiter.once('empty', () => {
+        setVideoSliceDialogParams(prevVal => ({ ...prevVal, isOpen: false }))
+        notify.success('切片完成！')
+        loadSlices()
+      })
+
       setVideoSliceDialogParams({
         isOpen: true,
         completedNumber: 0,
         totalNumber: result.length,
-        onCancel: () => {
-          cancelFlag = true
+        onCancel: async () => {
           setVideoSliceDialogParams(prevVal => ({ ...prevVal, isOpen: false }))
+          await limiter.disconnect()
+          limiter.stop()
         }
       })
-
-      for (let i=0,len=result.length; i < len; i++) {
-        if (cancelFlag) break
-        try {
-          await ffmpegIpcClient.slice({
-            originalFilePath: store.main.videoInputPath,
-            startTime: result[i][0],
-            endTime: result[i][1],
-            outputDirPath: store.main.slicesPath,
-            outputFileName: i.toString(),
-            useGpu: store.main.appSettings.useGpu,
-          })
-
-          setVideoSliceDialogParams(prevVal => ({ ...prevVal, completedNumber: i + 1 }))
-        } catch (e) {
-          notify.error(`第${i}段切片时发生异常：` + e)
-        }
-      }
-
-      setVideoSliceDialogParams(prevVal => ({ ...prevVal, isOpen: false }))
-      if (!cancelFlag) {
-        notify.success('切片完成！')
-        loadSlices()
-      }
     } catch(e) {
+      console.log(e)
       notify.error('发生异常：' + e)
     }
   }
 
   async function loadSlices() {
     if (store.main.slicesPath === '') return notify.warning('切片路径不能为空')
-    const filePaths = await fsPromise.readdir(store.main.slicesPath, { withFileTypes: true })
-    filePaths.sort((a, b) => {
-      const parsedA = parseInt(a.name)
-      const parsedB = parseInt(b.name)
-      if (isNaN(parsedA) && isNaN(parsedB)) return 0
-      if (isNaN(parsedA) && !isNaN(parsedB)) return -1
-      if (!isNaN(parsedA) && isNaN(parsedB)) return 1
-      return parsedA - parsedB
-    })
+    const loadResult = await execLoadSlices(store.main.slicesPath)
+    store.main.sliceList = loadResult.slices
 
-    let result: VideoSlice[] = []
-    for (let i=0,len=filePaths.length; i < len; i++) {
-      const itemName = filePaths[i].name
-      const fullPath = path.join(store.main.slicesPath, itemName)
-      const stat = filePaths[i]
-
-      if (stat.isFile()) {
-        result.push(new VideoSlice(fullPath))
-      } else if (stat.isDirectory()) {
-        const speaker = itemName
-        const filePaths = await fsPromise.readdir(fullPath)
-        result = result.concat(filePaths.map(item => new VideoSlice(path.join(fullPath, item), speaker)))
-      }
+    if (loadResult.source === 'files') {
+      saveProjectFile(store.main.slicesPath, loadResult.slices)
     }
-
-    store.main.sliceList = result
   }
 
   async function output() {

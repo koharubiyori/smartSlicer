@@ -12,9 +12,11 @@ import { VideoSlice } from '~/store/main'
 import MovieIcon from '@mui/icons-material/Movie'
 import { addEventListener } from '~/utils/utils'
 import { defaultSpeakerShowName } from '~/store/speakers'
+import path from 'path'
 
 export interface Props {
   videoSlice?: VideoSlice
+  videoSliceDirPath?: string
   onEmit(videoSlice: VideoSlice): void
   onDrop(): void
   onNext(): void
@@ -276,6 +278,9 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
   }, [props.videoSlice])
   // --- end ---
 
+  const fullVideoPath = props.videoSliceDirPath && props.videoSlice?.filePath ?
+    path.join(props.videoSliceDirPath, props.videoSlice.filePath) : undefined
+
   return (
     <div className={classes.videoContainer}>
       <div
@@ -284,7 +289,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
         className={classes.activeHint}
       >
         <video
-          src={props.videoSlice?.filePath}
+          src={fullVideoPath}
           preload="auto"
           controls={false}
           onDurationChange={() => {

@@ -4,6 +4,7 @@ import PlainPrefs from './utils/plainPrefs'
 const defaultValue: AppSettings = {
   useGpu: true,
   outputAudioOnly: true,
+  ffmpegWorkingNum: 2,
   languageForGenerateSubtitle: 'zh',
 }
 
