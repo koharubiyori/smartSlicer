@@ -142,7 +142,7 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
       limiter.on('failed', (error, jobInfo) => {
         if (jobInfo.retryCount < 3) {
           notify.warning('切片任务出错，准备重试：' + jobInfo.options.id)
-          return 25
+          return 25   // 25毫秒后重试
         } else {
           notify.error('切片任务失败：' + jobInfo.options.id)
         }
@@ -187,21 +187,32 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
     globalBackdropRef.show()
     const speakerNames = new Set(modifiedSliceList.map(item => item.speaker))
     for (let item of speakerNames) await fsPromise.mkdir(path.join(store.main.outputPath, item!)).catch(() => {})
-    for (let item of modifiedSliceList) {
-      const outputDirPath = path.join(store.main.outputPath, item.speaker!)
-      await ffmpegIpcClient.slice({
-        originalFilePath: item.filePath,
-        outputDirPath,
-        outputFileName: getBaseFirstName(item.filePath),
-        startTime: item.cutRange ? dayjs.duration(Math.round(item.cutRange[0] * 1000)).format(FFMPEG_TIME_FORMAT) : undefined,
-        endTime: item.cutRange ? dayjs.duration(Math.round(item.cutRange![1] * 1000)).format(FFMPEG_TIME_FORMAT) : undefined,
-        audioOnly: store.main.appSettings.outputAudioOnly,
-      })
-    }
 
-    globalBackdropRef.hide()
-    notify.success('输出结果完成')
-    store.main.sliceList = null
+    const limiter = new Bottleneck({
+      maxConcurrent: store.main.appSettings.ffmpegWorkingNum,
+      rejectOnDrop: false
+    })
+
+    modifiedSliceList.forEach(item => {
+      limiter.schedule(() => {
+        const outputDirPath = path.join(store.main.outputPath, item.speaker!)
+        return ffmpegIpcClient.slice({
+          originalFilePath: path.join(store.main.slicesPath, item.filePath),
+          outputDirPath,
+          outputFileName: getBaseFirstName(item.filePath),
+          startTime: item.cutRange ? dayjs.duration(Math.round(item.cutRange[0] * 1000)).format(FFMPEG_TIME_FORMAT) : undefined,
+          endTime: item.cutRange ? dayjs.duration(Math.round(item.cutRange![1] * 1000)).format(FFMPEG_TIME_FORMAT) : undefined,
+          audioOnly: store.main.appSettings.outputAudioOnly,
+        })
+      })
+    })
+
+    limiter.on('failed', (error, jobInfo) => jobInfo.retryCount < 3 ? 25 : undefined)
+    limiter.once('empty', () => {
+      globalBackdropRef.hide()
+      notify.success('输出结果完成')
+      store.main.sliceList = null
+    })
   }
 
   return (

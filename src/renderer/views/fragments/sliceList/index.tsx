@@ -45,11 +45,11 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
   function scrollIntoViewForActiveSlice() {
     const selectedItem = tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')
     selectedItem?.scrollIntoView({
-      block: store.speakers.lastMovement === 'next' ? 'start' : 'end'
+      block: 'center'
     })
 
-    store.speakers.lastMovement === 'next' &&
-      tableContainerEl.current?.scrollTo({ top: tableContainerEl.current!.scrollTop - 34 })
+    // store.speakers.lastMovement === 'next' &&
+    //   tableContainerEl.current?.scrollTo({ top: tableContainerEl.current!.scrollTop - 34 })
   }
 
   function isItemSelected(item: VideoSlice, index: number) {
