@@ -10,8 +10,8 @@ class MainStore {
   slicesPath: string = ''
   outputPath: string = ''
 
-
   sliceList: VideoSlice[] | null = null
+  activeSlicesPath: string = ''   // 在读取切片时会将slicesPath的值赋给这个变量
 
   appSettings = {
     useGpu: true,

@@ -174,6 +174,11 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
     if (store.main.slicesPath === '') return notify.warning('切片路径不能为空')
     const loadResult = await execLoadSlices(store.main.slicesPath)
     store.main.sliceList = loadResult.slices
+    store.main.activeSlicesPath = store.main.slicesPath
+
+    if (loadResult.slices.length === 0) {
+      return notify.warning('文件夹中没有符合要求的切片文件')
+    }
 
     if (loadResult.source === 'files') {
       saveProjectFile(store.main.slicesPath, loadResult.slices)
@@ -197,7 +202,7 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
       limiter.schedule(() => {
         const outputDirPath = path.join(store.main.outputPath, item.speaker!)
         return ffmpegIpcClient.slice({
-          originalFilePath: path.join(store.main.slicesPath, item.filePath),
+          originalFilePath: path.join(store.main.activeSlicesPath, item.filePath),
           outputDirPath,
           outputFileName: getBaseFirstName(item.filePath),
           startTime: item.cutRange ? dayjs.duration(Math.round(item.cutRange[0] * 1000)).format(FFMPEG_TIME_FORMAT) : undefined,
@@ -211,7 +216,6 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
     limiter.once('empty', () => {
       globalBackdropRef.hide()
       notify.success('输出结果完成')
-      store.main.sliceList = null
     })
   }
 

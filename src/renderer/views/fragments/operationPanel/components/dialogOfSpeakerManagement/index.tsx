@@ -15,6 +15,7 @@ import speakersPrefs from '~/prefs/speakersPrefs'
 import store from '~/store'
 import { Speaker } from '~/store/speakers'
 import { notify } from '~/utils/notify'
+import { showConfirm } from '~/utils/utils'
 
 export interface Props {
   isOpen: boolean
@@ -75,16 +76,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
   }
 
   async function removeVideoSample(speakerId: string, sampleFileName: string) {
-    const result = await dialogIpcClient.showMessageBox({
-      title: '提示',
-      type: 'question',
-      message: '确定要删除这条样本？',
-      buttons: ['确定', '取消'],
-      defaultId: 0,
-      noLink: true,
-    })
-
-    if (result.response === 1) { return }
+    if (!await showConfirm({ message: '确定要删除这条样本？' })) { return }
 
     const filePath = path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, speakerId, sampleFileName)
     const targetSpeaker = localSpeakerList.current.find(item => item.id === speakerId)!
@@ -92,16 +84,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
   }
 
   async function removeSpeaker(speakerId: string) {
-    const result = await dialogIpcClient.showMessageBox({
-      title: '提示',
-      type: 'question',
-      message: '确定要删除这个说话人？',
-      buttons: ['确定', '取消'],
-      defaultId: 0,
-      noLink: true,
-    })
-
-    if (result.response === 1) { return }
+    if (!await showConfirm({ message: '确定要删除这个说话人？' })) { return }
 
     const foundWillDeleteIndex = localSpeakerList.current.findIndex(item => item.id === speakerId)
     localSpeakerList.current.splice(foundWillDeleteIndex, 1)

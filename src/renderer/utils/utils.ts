@@ -1,5 +1,6 @@
 import p from 'path'
 import { appIpcClient } from 'ipcHub/modules/app'
+import { dialogIpcClient } from 'ipcHub/modules/dialog'
 
 export const supportedVideoExtList =
   'avi|flv|mkv|mov|mp4|m4v|mpeg|webm|wmv|rmvb|m2ts'.split('|')
@@ -47,4 +48,21 @@ export function isVisibleOnScreen(element: Element): boolean {
 
 export function getBaseFirstName(path: string) {
   return p.basename(path, p.extname(path))
+}
+
+export async function showConfirm({
+  title = '提示',
+  message = '',
+  okText = '确定',
+  cancelText = '取消'
+}) {
+  const result = await dialogIpcClient.showMessageBox({
+    title, message,
+    type: 'question',
+    buttons: [okText, cancelText],
+    defaultId: 0,
+    noLink: true,
+  })
+
+  return result.response === 0
 }
