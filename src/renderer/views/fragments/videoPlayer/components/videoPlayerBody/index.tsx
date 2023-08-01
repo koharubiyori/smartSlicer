@@ -19,7 +19,7 @@ export interface Props {
   videoSlice?: VideoSlice
   videoSliceDirPath?: string
   onEmit(videoSlice: VideoSlice): void
-  onUpdateCutRange(videoSlice: VideoSlice): void
+  onUpdateCutRange(cutRange: [number, number]): void
   onDrop(): void
   onNext(): void
   onBack(): void
@@ -141,6 +141,10 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
   useEffect(() => {
     let activeCut: HTMLDivElement | null = null
 
+    const updateCutRange = _.debounce((rawCutRange: [number, number | null]) =>
+      props.onUpdateCutRange(getTrueCutRange(rawCutRange)), 300, { trailing: true }
+    )
+
     const unsubscribers = [
       ...[videoCutLeftElRef.current!, videoCutRightElRef.current!].map(el =>
         addEventListener(el, 'mousedown', e => {
@@ -164,11 +168,15 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
         setCutRange(() => {
           const prevVal = cutRangeRef.current
           const computeNewTime = (oldTime: number) => _.clamp(oldTime + movementTime, 0, videoDurationRef.current)
+          let result: [number, number | null] = [0, null]
           if (activeCut === videoCutLeftElRef.current) {
-            return [computeNewTime(prevVal[0]), prevVal[1]]
+            result = [computeNewTime(prevVal[0]), prevVal[1]]
           } else {
-            return [prevVal[0], computeNewTime(prevVal[1] ?? videoDurationRef.current)]
+            result = [prevVal[0], computeNewTime(prevVal[1] ?? videoDurationRef.current)]
           }
+
+          updateCutRange(result)
+          return result
         })
       })
     ]
@@ -206,25 +214,9 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
     return () => void(cancelFlag = true)
   }, [isVideoPlaying])
 
-
-  const debouncedUpdateCutRange = useMemo(() => {
-    return _.debounce(() => {
-      props.onUpdateCutRange({
-        ...(props.videoSlice as any),
-        cutRange: getTrueCutRange(),
-        modified: true,
-      })
-    }, 300, { trailing: true })
-  }, [isVideoSliceFilePathChanged])
-
-  useEffect(() => {
-    if (!props.videoSlice) { return }
-    debouncedUpdateCutRange()
-  }, [isVideoSliceFilePathChanged, cutRange])
-
-  function getTrueCutRange(): [number, number] {
-    let minValue = cutRangeRef.current[0]
-    let maxValue = cutRangeRef.current[1] ?? videoDurationRef.current
+  function getTrueCutRange(rawCutRange = cutRangeRef.current): [number, number] {
+    let minValue = rawCutRange[0]
+    let maxValue = rawCutRange[1] ?? videoDurationRef.current
     if (minValue > maxValue) [minValue, maxValue] = [maxValue, minValue]
     return [minValue, maxValue]
   }

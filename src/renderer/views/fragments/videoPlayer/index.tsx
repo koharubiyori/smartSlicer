@@ -35,7 +35,10 @@ function VideoPlayerFragment(props: PropsWithChildren<Props>) {
           videoSliceDirPath={store.main.slicesPath}
           videoSlice={store.speakers.currentSelectedSlice}
           onEmit={newValue => store.speakers.emitAndNext(newValue)}
-          onUpdateCutRange={newValue => store.speakers.emit(newValue)}
+          onUpdateCutRange={newCutRange => store.speakers.emit({
+            ...store.speakers.currentSelectedSlice!,
+            cutRange: newCutRange
+          })}
           onDrop={() => store.speakers.dropAndNext()}
           onBack={() => store.speakers.back()}
           onNext={() => store.speakers.next()}

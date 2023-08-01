@@ -8,7 +8,7 @@ import { PropsWithChildren, useEffect, useRef } from 'react'
 import store from '~/store'
 import { VideoSlice } from '~/store/main'
 import SpeakersStore, { SpeakerSelects } from '~/store/speakers'
-import { isVisible as isVisibleOnScreen } from '~/utils/utils'
+import { isVisibleOnScreen } from '~/utils/utils'
 import classes from './index.module.scss'
 
 export interface Props {
@@ -31,25 +31,28 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
   useEffect(() => reaction(
     () => store.speakers.currentSelectedSlice,
     async () => {
-      const activeItemInSliceList = tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')
-      if (
-        activeItemInSliceList &&
-        !(await isVisibleOnScreen(activeItemInSliceList)) &&
-        !flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current
-      ) scrollIntoViewForActiveSlice()
+      setTimeout(() => {
+        const activeItemInSliceList = tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')
+        activeItemInSliceList && console.log(isVisibleOnScreen(activeItemInSliceList))
+        if (
+          activeItemInSliceList &&
+          !isVisibleOnScreen(activeItemInSliceList) &&
+          !flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current
+        ) scrollIntoViewForActiveSlice()
 
-      flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = false
+        flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = false
+      })
     }
   ), [])
 
   function scrollIntoViewForActiveSlice() {
     const selectedItem = tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')
     selectedItem?.scrollIntoView({
-      block: 'center'
+      block: store.speakers.lastMovement === 'next' ? 'start' : 'end'
     })
 
-    // store.speakers.lastMovement === 'next' &&
-    //   tableContainerEl.current?.scrollTo({ top: tableContainerEl.current!.scrollTop - 34 })
+    store.speakers.lastMovement === 'next' &&
+      tableContainerEl.current?.scrollTo({ top: tableContainerEl.current!.scrollTop - 34 })
   }
 
   function isItemSelected(item: VideoSlice, index: number) {
@@ -108,8 +111,8 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
                     flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = true
                   }}
                 >
-                  <TableCell align="center" style={{ color: 'var(--text-secondary)', maxWidth: 100 }}>{item.filePath}</TableCell>
-                  <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.speaker ?? '未指定'}</TableCell>
+                  <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.filePath}</TableCell>
+                  <TableCell align="center" style={{ color: 'var(--text-secondary)', minWidth: '5em' }}>{item.speaker ?? '未指定'}</TableCell>
                 </TableRow>
               )}
             </TableBody>

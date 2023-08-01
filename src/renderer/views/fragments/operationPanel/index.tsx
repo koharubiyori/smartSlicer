@@ -182,10 +182,10 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
 
   async function output() {
     if (store.main.outputPath === '') return notify.warning('最终输出路径不能为空')
-    const modifiedSliceList = store.main.sliceList?.filter(item => item.modified)
-    if (modifiedSliceList == null || modifiedSliceList.length === 0) return notify.warning('没有可输出的结果')
+    const namedSliceList = store.main.sliceList?.filter(item => item.speaker)
+    const speakerNames = new Set(namedSliceList?.map(item => item.speaker))
+    if (namedSliceList == null || speakerNames.size === 0) return notify.warning('没有可输出的结果')
     globalBackdropRef.show()
-    const speakerNames = new Set(modifiedSliceList.map(item => item.speaker))
     for (let item of speakerNames) await fsPromise.mkdir(path.join(store.main.outputPath, item!)).catch(() => {})
 
     const limiter = new Bottleneck({
@@ -193,7 +193,7 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
       rejectOnDrop: false
     })
 
-    modifiedSliceList.forEach(item => {
+    namedSliceList.forEach(item => {
       limiter.schedule(() => {
         const outputDirPath = path.join(store.main.outputPath, item.speaker!)
         return ffmpegIpcClient.slice({

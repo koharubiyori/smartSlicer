@@ -26,14 +26,23 @@ export function addEventListener<K extends keyof HTMLElementEventMap>(
   return () => element.removeEventListener(event, listener)
 }
 
-export function isVisible(domElement: Element): Promise<boolean> {
-  return new Promise((resolve) => {
-    const o = new IntersectionObserver(([entry]) => {
-      resolve(entry.intersectionRatio === 1)
-      o.disconnect()
-    })
-    o.observe(domElement)
-  })
+export function isVisibleOnScreen(element: Element): boolean {
+  const rect = element.getBoundingClientRect()
+  const centralPoint = {
+    x: rect.right - rect.width / 2,
+    y: rect.bottom - rect.height / 2
+  }
+
+  const hitElement = document.elementFromPoint(centralPoint.x, centralPoint.y)
+  const isOnTop = hitElement === element || element.contains(hitElement)
+
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth) &&
+    isOnTop
+  )
 }
 
 export function getBaseFirstName(path: string) {
