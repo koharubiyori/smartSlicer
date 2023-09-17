@@ -120,7 +120,9 @@
 }
 
 .helpTip {
-  font-size: 14px;
+  font-size: 13px;
+  margin: -7.5px 2.5px;
+  color: var(--text-primary);
 
   :global {
     ul {

@@ -14,6 +14,7 @@ import { VideoSlice } from '~/store/main'
 import { defaultSpeakerShowName } from '~/store/speakers'
 import { addEventListener } from '~/utils/utils'
 import classes from './index.module.scss'
+import CssVariablesOfTheme from '~/components/cssVariablesOfTheme'
 
 export interface Props {
   videoSlice?: VideoSlice
@@ -184,9 +185,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
     return () => unsubscribers.forEach(item => item())
   }, [])
 
-  useEffect(() => {
-    videoElRef.current!.playbackRate = playSpeed
-  }, [playSpeed])
+  useEffect(updatePlaySpeed)
 
   useEffect(() => {
     updateVideoTime()
@@ -222,7 +221,11 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
   }
 
   function play() {
-    videoElRef.current?.play().catch(console.log)
+    videoElRef.current?.play()
+  }
+
+  function updatePlaySpeed() {
+    videoElRef.current!.playbackRate = playSpeed
   }
 
   function onClickHandlerForProgressBody(e: any) {
@@ -321,15 +324,19 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
           <PlayCircleOutlineIcon sx={{ fontSize: 120, fill: '#eee' }} />
         </div>
         <Tooltip placement="left"
-          title={<div className={classes.helpTip}>
-            <ul>
-              <li>【方向键↑】：标记当前切片为“默认说话人”</li>
-              <li>【方向键↓】：移除当前切片标记</li>
-              <li>【方向键←】：切片列表后退</li>
-              <li>【方向键←】：切片列表前进</li>
-              <li>【空格】：重播当前切片</li>
-            </ul>
-          </div>}
+          title={
+            <CssVariablesOfTheme>
+              <div className={classes.helpTip}>
+                <ul>
+                  <li>【方向键↑】：标记当前切片为“默认说话人”</li>
+                  <li>【方向键↓】：移除当前切片标记</li>
+                  <li>【方向键←】：切片列表后退</li>
+                  <li>【方向键←】：切片列表前进</li>
+                  <li>【空格】：重播当前切片</li>
+                </ul>
+              </div>
+            </CssVariablesOfTheme>
+          }
         >
           <IconButton
             style={{ position: 'absolute', top: 0, right: 0 }}
@@ -363,12 +370,9 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
                 anchorOrigin={{ horizontal: -20, vertical: -210 }}
                 onClose={() => setIsSpeedMenuOpen(false)}
               >
-                <MenuItem onClick={setPlaySpeedAndCloseMenu(2)}>2倍速</MenuItem>
-                <MenuItem onClick={setPlaySpeedAndCloseMenu(1.5)}>1.5倍速</MenuItem>
-                <MenuItem onClick={setPlaySpeedAndCloseMenu(1.25)}>1.25倍速</MenuItem>
-                <MenuItem onClick={setPlaySpeedAndCloseMenu(1)}>1倍速</MenuItem>
-                <MenuItem onClick={setPlaySpeedAndCloseMenu(0.75)}>0.75倍速</MenuItem>
-                <MenuItem onClick={setPlaySpeedAndCloseMenu(0.5)}>0.5倍速</MenuItem>
+                {[2, 1.5, 1.25, 1, 0.75, 0.5].map(item =>
+                  <MenuItem onClick={setPlaySpeedAndCloseMenu(item)} selected={playSpeed === item}>{item}倍速</MenuItem>
+                )}
               </Menu>
               <IconButton onClick={turnScaleMode}>
                 <FitScreenIcon sx={{ fontSize: 26 }} />

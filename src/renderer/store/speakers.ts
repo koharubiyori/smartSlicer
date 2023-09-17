@@ -40,6 +40,12 @@ class SpeakersStore {
     return makeAutoObservable(clone)
   }
 
+  resetStatus() {
+    this.positionOfSpeakerLists = { [SpeakerSelects.All]: 0 }
+    this.lastMovement = null
+    this.selectedSpeaker = SpeakerSelects.All
+  }
+
   next() {
     if (this.currentSelectedPosition < this.sliceListOfSelectedSpeaker.length - 1) {
       this.positionOfSpeakerLists[this.selectedSpeaker] = this.currentSelectedPosition + 1

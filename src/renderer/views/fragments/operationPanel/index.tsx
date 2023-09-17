@@ -173,6 +173,7 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
   async function loadSlices() {
     if (store.main.slicesPath === '') return notify.warning('切片路径不能为空')
     const loadResult = await execLoadSlices(store.main.slicesPath)
+    store.speakers.resetStatus()
     store.main.sliceList = loadResult.slices
     store.main.activeSlicesPath = store.main.slicesPath
 
