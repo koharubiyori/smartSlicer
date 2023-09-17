@@ -23,11 +23,11 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
     const extName = audioOnly ? 'wav' : 'mp4'
 
     const videoCode = await (async () => {
-      if (!useGpu) return 'h264'
+      if (!useGpu) return 'libx264'
       const gpuList = await getGpuList()
       if (gpuList.includes('NVIDIA')) return 'hevc_nvenc'
       if (gpuList.includes('AMD')) return 'hevc_amf'
-      return 'h264'
+      return 'libx264'
     })()
 
     if (audioOnly) command.noVideo()
