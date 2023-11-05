@@ -3814,10 +3814,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ass-compiler@npm:^0.1.8":
-  version: 0.1.8
-  resolution: "ass-compiler@npm:0.1.8"
-  checksum: 01dcb75e109f7bfc8211d7ece588909e71cb34535a2c475aec51ee9f9793a0ac6de2ded40bb9a0ea97e78183727d2a36a75c5e0ead2f5ff9426bb7b22b27ada3
+"ass-compiler@npm:^0.1.11":
+  version: 0.1.11
+  resolution: "ass-compiler@npm:0.1.11"
+  checksum: a0c48111233f2b740ba4e44a5caf4b64c3c9ea26e4d2e952ac338e6883681fdb3964598461b1eb17d9355025a36e59ed8a9afcd9d5068f29bea2550da96635cd
   languageName: node
   linkType: hard
 
@@ -5322,6 +5322,15 @@ __metadata:
   version: 1.2.0
   resolution: "destroy@npm:1.2.0"
   checksum: 0acb300b7478a08b92d810ab229d5afe0d2f4399272045ab22affa0d99dbaf12637659411530a6fcd597a9bdac718fc94373a61a95b4651bbc7b83684a565e38
+  languageName: node
+  linkType: hard
+
+"detect-file-encoding-and-language@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "detect-file-encoding-and-language@npm:2.4.0"
+  bin:
+    dfeal: bin/cli.js
+  checksum: 21252b2b1afe5955a3fac6fc124076fab0798b4efe0b51f1875954abcc8badccdf288c66171d84d3064a645690bdeddace6c2d0ebb08f3f2469fa401807e764c
   languageName: node
   linkType: hard
 
@@ -10458,7 +10467,7 @@ __metadata:
     "@types/react-test-renderer": ^18.0.0
     "@types/terser-webpack-plugin": ^5.0.4
     "@types/webpack-bundle-analyzer": ^4.6.0
-    ass-compiler: ^0.1.8
+    ass-compiler: ^0.1.11
     bottleneck: ^2.19.5
     browserslist-config-erb: ^0.0.3
     chalk: ^4.1.2
@@ -10469,6 +10478,7 @@ __metadata:
     css-loader: ^6.8.1
     css-minimizer-webpack-plugin: ^5.0.0
     dayjs: ^1.11.8
+    detect-file-encoding-and-language: ^2.4.0
     detect-port: ^1.5.1
     electron: ^25.0.1
     electron-builder: ^24.2.1

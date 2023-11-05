@@ -21,6 +21,7 @@ import dayjs from 'dayjs'
 import { FFMPEG_TIME_FORMAT, supportedAudioExtList, supportedVideoExtList } from '~/../constants'
 import { loadSlices as execLoadSlices, saveProjectFile } from './utils/loadSlices'
 import Bottleneck from 'bottleneck'
+import languageEncoding from 'detect-file-encoding-and-language'
 
 export interface Props {
 
@@ -117,7 +118,9 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
     if (store.main.slicesPath === '') return notify.warning('切片路径不能为空')
 
     try {
-      const fileContent = await fsPromise.readFile(store.main.subtitleInputPath, 'utf-8')
+      const subtitleFileBuffer = await fsPromise.readFile(store.main.subtitleInputPath)
+      const fileEncoding = await languageEncoding(new Blob([subtitleFileBuffer])).then(info => info.encoding)
+      const fileContent = subtitleFileBuffer.toString(fileEncoding as any)
       const result = parseTimeRangesFromSubtitle(fileContent, path.extname(store.main.subtitleInputPath).replace('.', '') as any)
 
       const limiter = new Bottleneck({
