@@ -7,6 +7,7 @@ import FilterTasksScheduler from './utils/filterTasksScheduler'
 import store from '~/store'
 import DialogOfFilterResult from './components/dialogOfFilterResult'
 import { notify } from '~/utils/notify'
+import path from 'path'
 
 export interface Props {
   isOpen: boolean
@@ -42,7 +43,8 @@ function DialogOfAutoFilter(props: PropsWithChildren<Props>) {
     const scheduler = new FilterTasksScheduler(
       store.speakers.sliceListOfSelectedSpeaker,
       speakerList,
-      { ...localStore, workerNum: parseInt(localStore.workerNum) }
+      { ...localStore, workerNum: parseInt(localStore.workerNum) },
+      store.main.activeSlicesPath
     )
 
     scheduler.start()

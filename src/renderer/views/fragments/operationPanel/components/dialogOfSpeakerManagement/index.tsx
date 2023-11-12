@@ -216,7 +216,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
                               style={{ width: 200, margin: '0 auto', marginBottom: 5, border: '1px var(--text-secondary) solid', borderRadius: 3 }}
                             >
                               <div className="flex-row flex-cross-center flex-between">
-                                <div style={{ textOverflow: 'ellipsis' }}>{fileName}</div>
+                                <div style={{ textOverflow: 'ellipsis', overflow: 'hidden' }}>{fileName}</div>
                                 <div className='flex-row-inline' style={{ marginLeft: 10 }}>
                                   <IconButton onClick={() => playVideoSample(item.id, fileName)}>
                                     <VolumeUpIcon style={{ fontSize: 20, fill: 'var(--text-secondary)' }} />

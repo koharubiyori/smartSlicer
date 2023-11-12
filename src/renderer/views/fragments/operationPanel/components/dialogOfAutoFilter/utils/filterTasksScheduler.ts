@@ -23,7 +23,8 @@ class FilterTasksScheduler {
   constructor(
     public sliceList: VideoSlice[],
     public speakerList: Speaker[],
-    public options: FilterTaskSchedulerOptions
+    public options: FilterTaskSchedulerOptions,
+    public slicesPath: string
   ) { }
 
   async start() {
@@ -93,7 +94,7 @@ class FilterTasksScheduler {
     return new Promise((resolve, reject) => {
       this.#taskQueue.push(async () => {
         try {
-          const preprocessedSliceFile = await this.preprocess(filePath)
+          const preprocessedSliceFile = await this.preprocess(path.join(this.slicesPath, filePath))
           const similarityValue = await pythonClient.inferToneSimilarity(preprocessedSliceFile, voiceSamplePath)
           resolve(similarityValue)
         } catch(e) {
