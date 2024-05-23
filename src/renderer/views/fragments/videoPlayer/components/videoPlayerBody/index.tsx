@@ -1,4 +1,4 @@
-import FitScreenIcon from '@mui/icons-material/FitScreen'
+import SettingsOverscanIcon from '@mui/icons-material/SettingsOverscan'
 import LoopIcon from '@mui/icons-material/Loop'
 import MovieIcon from '@mui/icons-material/Movie'
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
@@ -211,7 +211,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
     })()
 
     return () => void(cancelFlag = true)
-  }, [isVideoPlaying])
+  }, [isVideoPlaying, videoLoop])
 
   function getTrueCutRange(rawCutRange = cutRangeRef.current): [number, number] {
     let minValue = rawCutRange[0]
@@ -375,7 +375,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
                 )}
               </Menu>
               <IconButton onClick={turnScaleMode}>
-                <FitScreenIcon sx={{ fontSize: 26 }} />
+                <SettingsOverscanIcon sx={{ fontSize: 26 }} />
               </IconButton>
             </div>
           </div>
