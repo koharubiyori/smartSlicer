@@ -22,11 +22,11 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
 
     const extName = audioOnly ? 'wav' : 'mp4'
 
-    const videoCode = await (async () => {
+    const videoCodec = await (async () => {
       if (!useGpu) return 'libx264'
       const gpuList = await getGpuList()
-      if (gpuList.includes('NVIDIA')) return 'hevc_nvenc'
-      if (gpuList.includes('AMD')) return 'hevc_amf'
+      if (gpuList.includes('NVIDIA')) return 'h264_nvenc'
+      if (gpuList.includes('AMD')) return 'h264_amf'
       return 'libx264'
     })()
 
@@ -35,8 +35,9 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
     return new Promise((resolve, reject) => {
       command
         .format(extName)
-        .videoCodec(videoCode)
+        .videoCodec(videoCodec)
         .save(path.join(outputDirPath, `${outputFileName}.${extName}`))
+        .addOutputOption('-pix_fmt', 'yuv420p')
         .on('end', resolve)
         .on('error', (e) => reject(e.message))
     })
