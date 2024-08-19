@@ -158,11 +158,13 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
                   <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>名称</TableCell>
                   <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>
                     <div
-                      style={{ position: 'relative', cursor: 'help' }}
+                      style={{ cursor: 'help' }}
                       title="只允许使用A到Z单键"
                     >
-                      <span>快捷键</span>
-                      <InfoIcon style={{ fontSize: 14, position: 'absolute', right: -5, top: 0 }} />
+                      <span style={{ position: 'relative' }}>
+                        <span>快捷键</span>
+                        <InfoIcon style={{ fontSize: 14, position: 'absolute', top: -3 }} />
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>声音样本</TableCell>
