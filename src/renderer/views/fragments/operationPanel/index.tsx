@@ -1,14 +1,18 @@
 import { Box, Button, FormGroup, Paper, TextField } from '@mui/material'
+import Bottleneck from 'bottleneck'
+import dayjs from 'dayjs'
+import languageEncoding from 'detect-file-encoding-and-language'
+import iconv from 'iconv-lite'
 import { shell } from 'electron'
 import fsPromise from 'fs/promises'
 import { dialogIpcClient } from 'ipcHub/modules/dialog'
 import { ffmpegIpcClient } from 'ipcHub/modules/ffmpeg'
 import { pythonClient } from 'ipcHub/modules/python'
 import { Observer } from 'mobx-react-lite'
-import path, { join } from 'path'
+import path from 'path'
 import React, { PropsWithChildren, useRef, useState } from 'react'
+import { FFMPEG_TIME_FORMAT, supportedAudioExtList, supportedVideoExtList } from '~/../constants'
 import store from '~/store'
-import { VideoSlice } from '~/store/main'
 import { globalBackdropRef } from '~/utils/globalBackdrop'
 import { notify } from '~/utils/notify'
 import parseTimeRangesFromSubtitle from '~/utils/parseTimeRangesFromSubtitle'
@@ -17,11 +21,7 @@ import DialogOfAutoFilter from './components/dialogOfAutoFilter'
 import DialogOfSpeakerManagement from './components/dialogOfSpeakerManagement'
 import DialogOfSubtitleGenerate, { DialogOfSubtitleGenerateRef } from './components/dialogOfSubtitleGenerate'
 import DialogOfVideoSlice, { Props as DialogPropsOfVideoSlice } from './components/dialogOfVideoSlice'
-import dayjs from 'dayjs'
-import { FFMPEG_TIME_FORMAT, supportedAudioExtList, supportedVideoExtList } from '~/../constants'
 import { loadSlices as execLoadSlices, saveProjectFile } from './utils/loadSlices'
-import Bottleneck from 'bottleneck'
-import languageEncoding from 'detect-file-encoding-and-language'
 
 export interface Props {
 
@@ -119,8 +119,8 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
 
     try {
       const subtitleFileBuffer = await fsPromise.readFile(store.main.subtitleInputPath)
-      const fileEncoding = await languageEncoding(new Blob([subtitleFileBuffer])).then(info => info.encoding)
-      const fileContent = subtitleFileBuffer.toString(fileEncoding as any)
+      const fileEncoding = await languageEncoding(new Blob([subtitleFileBuffer])).then(info => info.encoding) ?? 'UTF-8'
+      const fileContent = iconv.decode(subtitleFileBuffer, fileEncoding)
       const result = parseTimeRangesFromSubtitle(fileContent, path.extname(store.main.subtitleInputPath).replace('.', '') as any)
 
       const limiter = new Bottleneck({
