@@ -2,6 +2,8 @@ import path from 'path'
 
 export const IS_DEV = process.env.NODE_ENV === 'development'
 export const FFMPEG_TIME_FORMAT = 'HH:mm:ss.SSS'
+export const WITHOUT_AI = process.env.WITHOUT_AI === 'true'
+
 
 // for main
 export const ENVS_PATH = IS_DEV ?

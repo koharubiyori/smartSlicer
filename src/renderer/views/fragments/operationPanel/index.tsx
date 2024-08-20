@@ -11,7 +11,7 @@ import { pythonClient } from 'ipcHub/modules/python'
 import { Observer } from 'mobx-react-lite'
 import path from 'path'
 import React, { PropsWithChildren, useRef, useState } from 'react'
-import { FFMPEG_TIME_FORMAT, supportedAudioExtList, supportedVideoExtList } from '~/../constants'
+import { FFMPEG_TIME_FORMAT, supportedAudioExtList, supportedVideoExtList, WITHOUT_AI } from '~/../constants'
 import store from '~/store'
 import { globalBackdropRef } from '~/utils/globalBackdrop'
 import { notify } from '~/utils/notify'
@@ -347,21 +347,23 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
               onClick={loadSlices}
             >加载视频切片</Button>
 
-            <Button
-              variant="contained"
-              color="secondary"
-              size="small"
-              style={{ marginLeft: 10 }}
-              onClick={() => setIsDialogOfSpeakerManagementOpen(true)}
-            >说话人管理</Button>
+            {!WITHOUT_AI && <>
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                style={{ marginLeft: 10 }}
+                onClick={() => setIsDialogOfSpeakerManagementOpen(true)}
+              >说话人管理</Button>
 
-            <Button
-              variant="contained"
-              color="secondary"
-              size="small"
-              style={{ marginLeft: 10 }}
-              onClick={() => setIsDialogOfAutoFilterOpen(true)}
-            >切片自动筛选</Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                style={{ marginLeft: 10 }}
+                onClick={() => setIsDialogOfAutoFilterOpen(true)}
+              >切片自动筛选</Button>
+            </>}
 
             {/* <Button
               variant="contained"

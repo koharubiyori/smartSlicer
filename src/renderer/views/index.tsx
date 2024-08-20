@@ -9,12 +9,13 @@ import { notify } from '~/utils/notify'
 import { isNvidiaGpu } from '~/utils/utils'
 import SliceListFragment from './fragments/sliceList'
 import VideoPlayerFragment from './fragments/videoPlayer'
+import { WITHOUT_AI } from '../../constants'
 
 function AppView() {
 
   useEffect(() => {
-    checkGpuEnv()
-  })
+    !WITHOUT_AI && checkGpuEnv()
+  }, [])
 
   async function checkGpuEnv() {
     const isNvidiaGPU = await isNvidiaGpu()
