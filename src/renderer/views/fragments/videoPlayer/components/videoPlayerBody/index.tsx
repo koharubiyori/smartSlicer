@@ -375,9 +375,9 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
                   <MenuItem onClick={setPlaySpeedAndCloseMenu(item)} selected={playSpeed === item}>{item}倍速</MenuItem>
                 )}
               </Menu>
-              <IconButton onClick={turnScaleMode}>
+              {/* <IconButton onClick={turnScaleMode}>
                 <SettingsOverscanIcon sx={{ fontSize: 26 }} />
-              </IconButton>
+              </IconButton> */}
             </div>
           </div>
           <div className="progressContainer" style={cssVars as any}>
