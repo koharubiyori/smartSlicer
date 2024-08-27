@@ -95,7 +95,7 @@ class FilterTasksScheduler {
       this.#taskQueue.push(async () => {
         try {
           const preprocessedSliceFile = await this.preprocess(path.join(this.slicesPath, filePath))
-          const similarityValue = await pythonClient.inferToneSimilarity(preprocessedSliceFile, voiceSamplePath)
+          const similarityValue = await pythonClient.inferSpeakerSimilarity(preprocessedSliceFile, voiceSamplePath)
           resolve(similarityValue)
         } catch(e) {
           // reject(e)

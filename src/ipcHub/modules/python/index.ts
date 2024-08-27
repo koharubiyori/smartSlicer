@@ -20,7 +20,7 @@ export const pythonIpc = createIpcChannel('childProcess', {
     killCurrentWhisperProcess()
   },
 
-  async inferToneSimilarity(voice1Path: string, voice2Path: string): Promise<number> {
+  async inferSpeakerSimilarity(voice1Path: string, voice2Path: string): Promise<number> {
     const getScoreRegex = /^>>> (\-?[\d\.]+)$/m
 
     return new Promise((resolve, reject) => {

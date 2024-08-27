@@ -13,7 +13,7 @@ export const SPEAKER_VOICE_SAMPLES_DIR_PATH = path.resolve('speakerVoiceSamples'
 
 export const PYTHON_PATH = path.join(ENVS_PATH, 'python/python.exe')
 export const FFMPEG_BIN_PATH = path.join(ENVS_PATH, 'ffmpeg/bin')
-export const VRP_INFER_PATH = path.join(ENVS_PATH, 'VoiceprintRecognition_Pytorch/infer_contrast.py')
+export const VRP_INFER_PATH = path.join(ENVS_PATH, 'VoiceprintRecognition-Pytorch/infer_contrast.py')
 
 // for render
 export const supportedVideoExtList =
