@@ -1,13 +1,12 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, LinearProgress, Select, Slider, MenuItem, FormControl, InputLabel, FormControlLabel, Switch, Typography, TextField, Input } from '@mui/material'
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Slider, Switch, TextField, Typography } from '@mui/material'
 import { Observer, useLocalStore } from 'mobx-react-lite'
-import React, { PropsWithChildren, useEffect, useState } from 'react'
+import { PropsWithChildren, useEffect, useState } from 'react'
 import CssVariablesOfTheme from '~/components/cssVariablesOfTheme'
 import autoFilterPrefs from '~/prefs/autoFilterPrefs'
-import FilterTasksScheduler from './utils/filterTasksScheduler'
 import store from '~/store'
-import DialogOfFilterResult from './components/dialogOfFilterResult'
 import { notify } from '~/utils/notify'
-import path from 'path'
+import DialogOfFilterResult from './components/dialogOfFilterResult'
+import FilterTasksScheduler from './utils/filterTasksScheduler'
 
 export interface Props {
   isOpen: boolean

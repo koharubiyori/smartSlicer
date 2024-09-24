@@ -1,19 +1,19 @@
 import { PythonShell } from 'python-shell'
 import childProcess from 'child_process'
 import createIpcChannel from '../../createIpcChannel'
-import callWhisper, { SupportedDevices, SupportedLanguages, killCurrentWhisperProcess } from './utils/callWhisper'
-import { PYTHON_PATH, VRP_INFER_PATH } from '../../../constants'
+import callAutoSubtitle, { killCurrentWhisperProcess, SupportedLanguages } from './utils/callGenerateSrtPyScript'
+import { PYTHON_PATH, SEPARATE_VOCALS_SCRIPT, UVR_MODEL_PATH, VRP_INFER_PATH } from '../../../constants'
 import path from 'path'
+import callGenerateSrtPyScript from './utils/callGenerateSrtPyScript'
+import md5 from 'md5'
+import iconv from 'iconv-lite'
+import { OrderMessageOfGenerateSrt, PythonOrderMessage } from './pythonOrder'
+
 
 export const pythonIpc = createIpcChannel('childProcess', {
   isCudaAvailable() {
-    return PythonShell.runString('import torch; print(torch.cuda.is_available())', {
-      pythonPath: PYTHON_PATH
-    }).then(([pyBoolValueResult]) => pyBoolValueResult === 'True')
-  },
-
-  whisper(filePath: string, language: SupportedLanguages, outputDir: string, device: SupportedDevices) {
-    return callWhisper(filePath, language, outputDir, device)
+    return PythonShell.runString('import torch; print(torch.cuda.is_available())')
+      .then(([pyBoolValueResult]) => pyBoolValueResult === 'True')
   },
 
   async killCurrentWhisperProcess() {
@@ -36,6 +36,54 @@ export const pythonIpc = createIpcChannel('childProcess', {
           resolve(parseFloat(score![1]))
         }
       )
+    })
+  },
+}, {
+  generateSrt(modelName: string, filePath: string, language: SupportedLanguages) {
+    const [port] = this.event.ports
+    const outputFileId = md5(filePath).substring(0, 6)
+    const outputFileName = path.basename(filePath).replace( /\.[^/\\.]+$/, '') + `_${outputFileId}.srt`
+    const pythonShell = callGenerateSrtPyScript(modelName, filePath, outputFileName, language)
+
+    ;(() => {
+      const message: OrderMessageOfGenerateSrt.SendOutputFileNameMessage = {
+        type: 'sendOutputFileName',
+        fileName: outputFileName
+      }
+      port.postMessage(message)
+    })()
+
+    pythonShell.stdout.on('data', data => {
+      // the received data of terminal output can be sent to renderer process and it's fine for display. but if printed in main process, garbled text will occur as if wrong encoding is being used.
+      const message: PythonOrderMessage = {
+        type: 'text',
+        content: iconv.decode(data, 'utf8')
+      }
+      port.postMessage(message)
+    })
+
+    pythonShell.stderr.on('data', data => {
+      const message: PythonOrderMessage = {
+        type: 'text',
+        content: iconv.decode(data, 'utf8')
+      }
+      port.postMessage(message)
+    })
+
+    pythonShell.on('close', () => {
+      const message: PythonOrderMessage = { type: 'close' }
+      port.postMessage(message)
+    })
+  },
+
+  separateVocals(filePath: string) {
+    const [port] = this.event.ports
+    const pythonShell = new PythonShell(SEPARATE_VOCALS_SCRIPT, {
+      args: [
+        '--model_path', UVR_MODEL_PATH,
+        '--input', filePath,
+        '--output_dir',
+      ]
     })
   }
 })

@@ -51,7 +51,7 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
         .noVideo()
         .format('wav')
         .save(outputFilePath)
-        .on('end', resolve)
+        .on('end', resolve as any)
         .on('error', e => reject(e.message))
     })
   }

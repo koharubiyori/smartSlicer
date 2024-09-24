@@ -3,7 +3,7 @@ import createIpcChannel from '../createIpcChannel'
 
 export const dialogIpc = createIpcChannel('dialog', {
   showOpenDialog(options: OpenDialogOptions) {
-    return dialog.showOpenDialog(this, options)
+    return dialog.showOpenDialog(this.mainWindow, options)
   },
 
   showMessageBox(options: MessageBoxOptions) {

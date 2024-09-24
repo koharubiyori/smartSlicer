@@ -2,21 +2,21 @@ import createIpcChannel from '../createIpcChannel'
 
 export const windowIpc = createIpcChannel('window', {
   minimize() {
-    this.minimize()
+    this.mainWindow.minimize()
   },
 
   toggleMaximize() {
-    const isMaximized = this.isMaximized()
-    isMaximized ? this.unmaximize() : this.maximize()
+    const isMaximized = this.mainWindow.isMaximized()
+    isMaximized ? this.mainWindow.unmaximize() : this.mainWindow.maximize()
     return !isMaximized
   },
 
   isMaximized() {
-    return this.isMaximized()
+    return this.mainWindow.isMaximized()
   },
 
   close() {
-    this.close()
+    this.mainWindow.close()
   }
 })
 

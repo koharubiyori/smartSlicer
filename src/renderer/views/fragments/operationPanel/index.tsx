@@ -83,33 +83,13 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
     }
   }
 
-  async function generateSubtitle() {
+  async function showDialogOfGenerateSubtitle() {
     if (store.main.videoInputPath === '') return notify.warning('完整视频路径不能为空')
+    dialogOfSubtitleGenerateDialogRef.current?.show()
 
-    globalBackdropRef.show()
     const isCudaAvailable = await pythonClient.isCudaAvailable()
     !isCudaAvailable && notify.warning('CUDA不可用，预计需要较长时间！')
     isCudaAvailable && !store.main.appSettings.useGpu && notify.warning('未开启GPU加速，预计需要较长时间！')
-
-    globalBackdropRef.hide()
-    dialogOfSubtitleGenerateDialogRef.current?.show()
-
-    const outputPath = './generatedSubtitles'
-    const result = await pythonClient.whisper(
-      store.main.videoInputPath,
-      store.main.appSettings.languageForGenerateSubtitle,
-      outputPath,
-      store.main.appSettings.useGpu ? 'cuda' : 'cpu'
-    )
-
-    dialogOfSubtitleGenerateDialogRef.current?.hide()
-    if (result === null) {
-      notify.success('生成完毕')
-      const filePath = path.resolve(outputPath, path.basename(store.main.videoInputPath, path.extname(store.main.videoInputPath)) + '.srt')
-      store.main.subtitleInputPath = filePath
-    } else if (result !== 'SIGTERM') {
-      notify.error('发生错误')
-    }
   }
 
   async function videoSlice() {
@@ -266,13 +246,13 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
               }}
             >浏览</Button>
 
-            {/* <Button
+            <Button
               variant="contained"
               color="secondary"
               size="small"
               style={{ marginLeft: 10, whiteSpace: 'nowrap' }}
-              onClick={generateSubtitle}
-            >自动生成</Button> */}
+              onClick={showDialogOfGenerateSubtitle}
+            >自动生成</Button>
           </Box>
 
           <Box className="flex-row flex-cross-end" style={{ marginTop: 5 }}>

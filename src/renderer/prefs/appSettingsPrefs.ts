@@ -5,7 +5,8 @@ const defaultValue: AppSettings = {
   useGpu: true,
   outputAudioOnly: true,
   ffmpegWorkingNum: 2,
-  languageForGenerateSubtitle: 'zh',
+  languageForGenerateSubtitle: 'auto',
+  modelForGenerateSubtitle: 'small'
 }
 
 const appSettingsPrefs = new PlainPrefs('appSettingsPrefs', defaultValue).prefs

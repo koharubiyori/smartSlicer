@@ -1,4 +1,4 @@
-import { SupportedLanguages } from 'ipcHub/modules/python/utils/callWhisper'
+import { SupportedLanguages } from 'ipcHub/modules/python/utils/callGenerateSrtPyScript'
 import { makeAutoObservable } from "mobx"
 import path from 'path'
 import appSettingsPrefs from '~/prefs/appSettingsPrefs'
@@ -17,7 +17,8 @@ class MainStore {
     useGpu: true,
     outputAudioOnly: false,
     ffmpegWorkingNum: 2,
-    languageForGenerateSubtitle: 'zh' as SupportedLanguages,
+    languageForGenerateSubtitle: 'auto' as SupportedLanguages,
+    modelForGenerateSubtitle: ''
   }
 
   constructor() {
