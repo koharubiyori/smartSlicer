@@ -118,7 +118,11 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
       pyShellPort.start()
     })
 
-    if (vocalsAudioPath === '') return printLog('流程中止')
+    if (vocalsAudioPath === '') {
+      setIsRunning(false)
+      printLog('流程中止')
+      return
+    }
 
     // start to generate srt with the vocals audio
     printLog('开始生成字幕文件...')
@@ -142,8 +146,10 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
         setLogContent(prevVal => prevVal + 'GenerateSrt进程已退出！\n')
         setIsRunning(false)
 
-        fsPromise.access(subtitleFilePath, fsPromise.constants.F_OK)
-          .then(() => {
+        fsPromise.rm(PREPROCESS_OUTPUT_CACHE_DIR_PATH, { recursive: true, force: true })
+        fsPromise.stat(subtitleFilePath)
+          .then(stat => {
+            if (stat.size === 0) throw new Error()
             store.main.subtitleInputPath = subtitleFilePath
             printLog('字幕文件生成完毕！')
             notify.success('字幕文件生成完毕')
