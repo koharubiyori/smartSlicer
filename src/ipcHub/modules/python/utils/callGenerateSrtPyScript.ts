@@ -5,7 +5,6 @@ import { PythonShell } from 'python-shell'
 import md5 from 'md5'
 
 export const supportedLanguageMaps = {
-  auto: '自动检测',
   zh: '中文',
   ja: '日语',
   en: '英语',
