@@ -246,13 +246,15 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
               }}
             >浏览</Button>
 
-            <Button
-              variant="contained"
-              color="secondary"
-              size="small"
-              style={{ marginLeft: 10, whiteSpace: 'nowrap' }}
-              onClick={showDialogOfGenerateSubtitle}
-            >自动生成</Button>
+            {!WITHOUT_AI &&
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                style={{ marginLeft: 10, whiteSpace: 'nowrap' }}
+                onClick={showDialogOfGenerateSubtitle}
+              >自动生成</Button>
+            }
           </Box>
 
           <Box className="flex-row flex-cross-end" style={{ marginTop: 5 }}>
