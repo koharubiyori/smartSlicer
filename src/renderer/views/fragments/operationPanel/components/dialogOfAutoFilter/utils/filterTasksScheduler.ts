@@ -3,7 +3,7 @@ import { ffmpegIpcClient } from "ipcHub/modules/ffmpeg"
 import { pythonClient } from "ipcHub/modules/python"
 import md5 from "md5"
 import path from "path"
-import { SPEAKER_VOICE_SAMPLES_DIR_PATH } from "~/../constants"
+import { PREPROCESS_OUTPUT_CACHE_DIR_PATH, SPEAKER_VOICE_SAMPLES_DIR_PATH } from "~/../constants"
 import { VideoSlice } from "~/store/main"
 import { AutoFilterSettings } from ".."
 import { Speaker } from '~/store/speakers'
@@ -14,7 +14,7 @@ export interface FilterTaskSchedulerOptions extends AutoFilterSettings {
 }
 
 class FilterTasksScheduler {
-  static preprocessCacheDirPath = '.preprocessCache'
+  static preprocessCacheDirPath = PREPROCESS_OUTPUT_CACHE_DIR_PATH
   #intervalKey: any = 0
   #taskQueue: (() => Promise<void>)[] = []
   #voiceSamples: { speakerId: string, filePath: string }[] = []

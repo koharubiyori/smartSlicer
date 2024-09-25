@@ -1,4 +1,5 @@
 import p from 'path'
+import fsPromise from 'fs/promises'
 import { appIpcClient } from 'ipcHub/modules/app'
 import { dialogIpcClient } from 'ipcHub/modules/dialog'
 

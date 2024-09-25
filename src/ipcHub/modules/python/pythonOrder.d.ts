@@ -12,11 +12,21 @@ export type PythonOrderMessage =
   PythonOrderCloseMessage
 
 export namespace OrderMessageOfGenerateSrt {
-  interface SendOutputFileNameMessage {
-    type: 'sendOutputFileName',
-    fileName: string
+  interface SendOutputFilePathMessage {
+    type: 'sendOutputFilePath'
+    filePath: string
   }
 
   type Messages = PythonOrderMessage |
-    SendOutputFileNameMessage
+    SendOutputFilePathMessage
+}
+
+export namespace OrderMessageOfSeparateVocals {
+  interface SendOutputFilePathMessage {
+    type: 'sendOutputFilePath'
+    filePath: string
+  }
+
+  type Messages = PythonOrderMessage |
+    SendOutputFilePathMessage
 }

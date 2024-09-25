@@ -39,6 +39,7 @@ export default function createIpcChannel<
           if (orders && Object.keys(orders).includes(getter)) {
             const { port1, port2 } = new MessageChannel()
             ipcRenderer.postMessage(channelName, [getter, ...args], [port1])
+
             return port2
           }
           throw Error(`The method '${getter}' is not found in '${channelName}' channel!'`)

@@ -1,13 +1,13 @@
-import { PythonShell } from 'python-shell'
 import childProcess from 'child_process'
-import createIpcChannel from '../../createIpcChannel'
-import callAutoSubtitle, { killCurrentWhisperProcess, SupportedLanguages } from './utils/callGenerateSrtPyScript'
-import { PYTHON_PATH, SEPARATE_VOCALS_SCRIPT, UVR_MODEL_PATH, VRP_INFER_PATH } from '../../../constants'
-import path from 'path'
-import callGenerateSrtPyScript from './utils/callGenerateSrtPyScript'
-import md5 from 'md5'
 import iconv from 'iconv-lite'
-import { OrderMessageOfGenerateSrt, PythonOrderMessage } from './pythonOrder'
+import md5 from 'md5'
+import path from 'path'
+import { PythonShell } from 'python-shell'
+import { GENERATED_SUBTITLES_DIR_PATH, PREPROCESS_OUTPUT_CACHE_DIR_PATH, VRP_INFER_PATH } from '../../../constants'
+import createIpcChannel from '../../createIpcChannel'
+import { OrderMessageOfGenerateSrt, OrderMessageOfSeparateVocals, PythonOrderMessage } from './pythonOrder'
+import callGenerateSrtPyScript, { killCurrentProcessOfGenerateSrt, SupportedLanguages } from './utils/callGenerateSrtPyScript'
+import callSeparateVocalsPyScript, { killCurrentProcessOfSeparateVocals } from './utils/callSeparateVocalsPyScript'
 
 
 export const pythonIpc = createIpcChannel('childProcess', {
@@ -16,8 +16,12 @@ export const pythonIpc = createIpcChannel('childProcess', {
       .then(([pyBoolValueResult]) => pyBoolValueResult === 'True')
   },
 
-  async killCurrentWhisperProcess() {
-    killCurrentWhisperProcess()
+  killCurrentProcessOfGenerateSrt() {
+    killCurrentProcessOfGenerateSrt()
+  },
+
+  killCurrentProcessOfSeparateVocals() {
+    killCurrentProcessOfSeparateVocals()
   },
 
   async inferSpeakerSimilarity(voice1Path: string, voice2Path: string): Promise<number> {
@@ -46,9 +50,9 @@ export const pythonIpc = createIpcChannel('childProcess', {
     const pythonShell = callGenerateSrtPyScript(modelName, filePath, outputFileName, language)
 
     ;(() => {
-      const message: OrderMessageOfGenerateSrt.SendOutputFileNameMessage = {
-        type: 'sendOutputFileName',
-        fileName: outputFileName
+      const message: OrderMessageOfGenerateSrt.SendOutputFilePathMessage = {
+        type: 'sendOutputFilePath',
+        filePath: path.join(GENERATED_SUBTITLES_DIR_PATH, outputFileName)
       }
       port.postMessage(message)
     })()
@@ -78,12 +82,33 @@ export const pythonIpc = createIpcChannel('childProcess', {
 
   separateVocals(filePath: string) {
     const [port] = this.event.ports
-    const pythonShell = new PythonShell(SEPARATE_VOCALS_SCRIPT, {
-      args: [
-        '--model_path', UVR_MODEL_PATH,
-        '--input', filePath,
-        '--output_dir',
-      ]
+    const pythonShell = callSeparateVocalsPyScript(filePath)
+    let outputFileName = ''
+    const getOutputFileNameRegex = /^>>> ([\s\S]+\.wav)\s+$/m
+
+    pythonShell.stdout.on('data', data => {
+      const content = iconv.decode(data, 'utf8')
+      const message: PythonOrderMessage = { type: 'text', content }
+      port.postMessage(message)
+      if (getOutputFileNameRegex.test(content)) outputFileName = content.match(getOutputFileNameRegex)!![1]
+    })
+
+    pythonShell.stderr.on('data', data => {
+      const message: PythonOrderMessage = {
+        type: 'text',
+        content: iconv.decode(data, 'utf8')
+      }
+      port.postMessage(message)
+    })
+
+    pythonShell.on('close', () => {
+      const message: PythonOrderMessage = { type: 'close' }
+      const outputFileNameMessage: OrderMessageOfSeparateVocals.SendOutputFilePathMessage = {
+        type: 'sendOutputFilePath',
+        filePath: path.join(PREPROCESS_OUTPUT_CACHE_DIR_PATH, outputFileName)
+      }
+      outputFileName !== '' && port.postMessage(outputFileNameMessage)
+      port.postMessage(message)
     })
   }
 })

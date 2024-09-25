@@ -30,7 +30,7 @@ npm-debug.log.*
 *.scss.d.ts
 
 .history
-.preprocessCache
+.preprocessOutputCache
 /generatedSubtitles
 /speakerVoiceSamples
 /envs

@@ -141,6 +141,6 @@ export default function callGenerateSrtPyScript(
   return processInstance
 }
 
-export function killCurrentWhisperProcess() {
+export function killCurrentProcessOfGenerateSrt() {
   processInstance?.kill()
 }

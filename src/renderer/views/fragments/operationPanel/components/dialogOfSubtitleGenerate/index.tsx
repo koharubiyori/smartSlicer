@@ -1,15 +1,17 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, MenuItem, Select, TextField, Typography } from '@mui/material'
 import fsPromise from 'fs/promises'
 import { pythonClient } from 'ipcHub/modules/python'
-import { OrderMessageOfGenerateSrt } from 'ipcHub/modules/python/pythonOrder'
+import { OrderMessageOfGenerateSrt, OrderMessageOfSeparateVocals } from 'ipcHub/modules/python/pythonOrder'
 import { supportedLanguageMaps } from 'ipcHub/modules/python/utils/callGenerateSrtPyScript'
 import { Observer } from 'mobx-react-lite'
 import path from 'path'
 import { MutableRefObject, PropsWithChildren, useEffect, useRef, useState } from 'react'
-import { GENERATED_SUBTITLES_DIR_PATH, WHISPER_MODELS_PATH } from '~/../constants'
+import { PREPROCESS_OUTPUT_CACHE_DIR_PATH, WHISPER_MODELS_PATH } from '~/../constants'
 import store from '~/store'
 import { notify } from '~/utils/notify'
 import classes from './index.module.scss'
+import { ffmpegIpcClient } from 'ipcHub/modules/ffmpeg'
+import md5 from 'md5'
 
 export interface Props {
   getRef?: MutableRefObject<any>
@@ -59,42 +61,107 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
   }
 
   async function start() {
+    if (store.main.appSettings.modelForGenerateSubtitle === '') return notify.warning('请先选择要使用的模型')
     setIsRunning(true)
     setLogContent('')
-    if (store.main.appSettings.modelForGenerateSubtitle === '') return notify.warning('请先选择要使用的模型')
+
+    function printLog(text: string) {
+      setLogContent(prevVal => (prevVal.length !== 0 && prevVal[prevVal.length - 1] !== '\n' ? '\n' : '') +  prevVal + text + '\n')
+    }
+
+    const inputFileId = md5(store.main.videoInputPath).substring(0, 6)
+    const inputFileBaseName = path.basename(store.main.videoInputPath).replace(/\..+?$/, '')
+    const audioFilePath = path.join(PREPROCESS_OUTPUT_CACHE_DIR_PATH, inputFileBaseName + '_' + inputFileId + '_audio.wav')
+
+    // get the audio track of the inputted video
+    try {
+      printLog('开始从视频中分离音频...')
+
+      await fsPromise.mkdir(PREPROCESS_OUTPUT_CACHE_DIR_PATH).catch(console.log)
+      await ffmpegIpcClient.video2audio(store.main.videoInputPath, audioFilePath)
+    } catch(e: any) {
+      printLog(e.toString())
+      return
+    }
+
+    // get the pure vocals from the audio
+    printLog('开始从音频中提取人声...')
+    const vocalsAudioPath = await new Promise<string>((resolve) => {
+      const pyShellPort = pythonClient.separateVocals(audioFilePath)
+
+      let isLastMsgWithPercent = false
+      let outputFilePath = ''
+      pyShellPort.addEventListener('message', message => {
+        const messageData: OrderMessageOfSeparateVocals.Messages = message.data
+        console.log(messageData)
+        if (messageData.type === 'sendOutputFilePath') {
+          outputFilePath = messageData.filePath
+        }
+        if (messageData.type === 'text') {
+          console.log(messageData.content)
+          setLogContent(prevVal => {
+            let result = ''
+            if (messageData.content.includes('%') && isLastMsgWithPercent) {
+              result = prevVal.replace(/^([\s\S]+\n)[\s\S]+$/, '$1') + messageData.content
+            } else {
+              result = prevVal + messageData.content
+            }
+            isLastMsgWithPercent = messageData.content.includes('%')
+            return result
+          })
+        }
+        if (messageData.type === 'close') {
+          printLog('SeparateVocals进程已退出！')
+          resolve(outputFilePath)
+        }
+      })
+      pyShellPort.start()
+    })
+
+    if (vocalsAudioPath === '') return printLog('流程中止')
+
+    // start to generate srt with the vocals audio
+    printLog('开始生成字幕文件...')
     const pyShellPort = pythonClient.generateSrt(
       store.main.appSettings.modelForGenerateSubtitle,
-      store.main.videoInputPath,
+      vocalsAudioPath,
       store.main.appSettings.languageForGenerateSubtitle
     )
 
-    let subtitleFileName = ''
+    let subtitleFilePath = ''
     pyShellPort.addEventListener('message', message => {
       const messageData: OrderMessageOfGenerateSrt.Messages = message.data
-      if (messageData.type === 'sendOutputFileName') {
-        subtitleFileName = messageData.fileName
+      if (messageData.type === 'sendOutputFilePath') {
+        subtitleFilePath = messageData.filePath
       }
       if (messageData.type === 'text') {
         console.log(messageData.content)
         setLogContent(prevVal => prevVal + messageData.content)
       }
       if (messageData.type === 'close') {
-        setLogContent(prevVal => prevVal + '进程已退出！\n')
+        setLogContent(prevVal => prevVal + 'GenerateSrt进程已退出！\n')
         setIsRunning(false)
 
-        const subtitleFilePath = path.join(GENERATED_SUBTITLES_DIR_PATH, subtitleFileName)
         fsPromise.access(subtitleFilePath, fsPromise.constants.F_OK)
           .then(() => {
             store.main.subtitleInputPath = subtitleFilePath
+            printLog('字幕文件生成完毕！')
+            notify.success('字幕文件生成完毕')
           })
-          .catch(() => console.warn(`the visibility check for ${subtitleFileName} proved that it was not generated!`))
+          .catch(() => {
+            const fileName = path.basename(subtitleFilePath)
+            console.warn(`the visibility check for ${fileName} proved that it was not generated!`)
+            printLog('字幕文件生成失败！')
+            notify.error('字幕文件生成失败')
+          })
       }
     })
     pyShellPort.start()
   }
 
   function stop() {
-    pythonClient.killCurrentWhisperProcess()
+    pythonClient.killCurrentProcessOfGenerateSrt()
+    pythonClient.killCurrentProcessOfSeparateVocals()
     setIsRunning(false)
   }
 
