@@ -24,7 +24,7 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
 
     const videoCodec = await (async () => {
       if (!useGpu) return 'libx264'
-      const gpuList = await getGpuList()
+      const gpuList = await getCachedGpuList()
       if (gpuList.includes('NVIDIA')) return 'h264_nvenc'
       if (gpuList.includes('AMD')) return 'h264_amf'
       return 'libx264'
@@ -74,3 +74,12 @@ function createDayjsDurationFromFFmpegDate(ffmpegDate: string) {
   const [ss, sss] = ss_sss.split('.').map(item => parseInt(item))
   return dayjs.duration({ hours: parseInt(hh), minutes: parseInt(mm), seconds: ss, milliseconds: sss })
 }
+
+const getCachedGpuList = (() => {
+  let list: ("NVIDIA" | "AMD")[] = []
+  return async function() {
+    if (list.length > 0) return list
+    list = await getGpuList()
+    return list
+  }
+})()
