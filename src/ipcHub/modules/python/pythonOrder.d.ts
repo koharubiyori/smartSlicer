@@ -1,3 +1,4 @@
+// 这里只存放main -> renderer的message类型
 export interface PythonOrderTextMessage {
   type: 'text'
   content: string
@@ -22,11 +23,32 @@ export namespace OrderMessageOfGenerateSrt {
 }
 
 export namespace OrderMessageOfSeparateVocals {
-  interface SendOutputFilePathMessage {
-    type: 'sendOutputFilePath'
-    filePath: string
+  interface SuccessMessage {
+    type: 'success'
+    id: string
+  }
+  interface ErrorMessage {
+    type: 'error'
+    id: string
+    detail: string
   }
 
   type Messages = PythonOrderMessage |
-    SendOutputFilePathMessage
+    SuccessMessage | ErrorMessage
+}
+
+export namespace OrderMessageOfInferSpeakerSimilarity {
+  interface ResultMessage {
+    type: 'result'
+    id: string
+    score: string
+  }
+
+  interface ErrorResult {
+    type: 'error'
+    id: string
+    detail: string
+  }
+
+  type Messages = ResultMessage | ErrorResult
 }

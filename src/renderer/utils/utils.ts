@@ -2,6 +2,8 @@ import p from 'path'
 import fsPromise from 'fs/promises'
 import { appIpcClient } from 'ipcHub/modules/app'
 import { dialogIpcClient } from 'ipcHub/modules/dialog'
+import md5 from 'md5'
+import { PREPROCESS_OUTPUT_CACHE_DIR_PATH } from '~/../constants'
 
 export const supportedVideoExtList =
   'avi|flv|mkv|mov|mp4|m4v|mpeg|webm|wmv|rmvb|m2ts'.split('|')
@@ -66,4 +68,13 @@ export async function showConfirm({
   })
 
   return result.response === 0
+}
+
+export function getCachedOutputFilePath(type: 'audio' | 'vocal', filePath: string) {
+  const inputFileId = md5(filePath).substring(0, 6)
+  const inputFileBaseName = p.basename(filePath).replace(/\..+?$/, '')
+  const audioFilePath = p.join(PREPROCESS_OUTPUT_CACHE_DIR_PATH, inputFileBaseName + '_' + inputFileId + '_audio.wav')
+
+  if(type === 'audio') return audioFilePath
+  return p.join(PREPROCESS_OUTPUT_CACHE_DIR_PATH, p.basename(audioFilePath, '.wav') + '_(Vocals)_htdemucs.wav')
 }

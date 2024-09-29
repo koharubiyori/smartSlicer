@@ -8,7 +8,7 @@ import { CUDA_HOME, FFMPEG_BIN_PATH, PYTHON_PATH } from '../constants'
 
 PythonShell.defaultOptions = {
   pythonPath: PYTHON_PATH,
-  pythonOptions: ['-u'],
+  pythonOptions: ['-u', '-X', 'utf8'],
   env: { Path: [FFMPEG_BIN_PATH, CUDA_HOME].join(';') }
 }
 

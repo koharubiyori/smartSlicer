@@ -12,7 +12,7 @@
     "rebuild": "electron-rebuild --parallel --types prod,dev,optional --module-dir release/app",
     "start": "npx tsx ./.erb/scripts/check-port-in-use.js && npm run start:renderer",
     "start@without-ai": "cross-env WITHOUT_AI=true npm run start",
-    "start:main": "cross-env NODE_ENV=development NODE_OPTIONS=\"--import tsx\" electronmon .",
+    "start:main": "cross-env NODE_ENV=development NODE_OPTIONS=\"--import tsx\" electronmon . --inspect=9229",
     "start:preload": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack --config ./.erb/configs/webpack.config.preload.dev.ts",
     "start:renderer": "cross-env NODE_ENV=development TS_NODE_TRANSPILE_ONLY=true webpack serve --config ./.erb/configs/webpack.config.renderer.dev.ts",
     "test": "jest"

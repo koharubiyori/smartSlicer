@@ -249,7 +249,6 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
   function handlerOnTimeUpdate(newValue: number = videoElRef.current!.currentTime) {
     const trueCutRange = getTrueCutRange()
     const clampedVideoTime = _.clamp(newValue, trueCutRange[0], trueCutRange[1])
-    console.log(clampedVideoTime, trueCutRange[1])
     if (clampedVideoTime === trueCutRange[1]) {
       // 手动实现loop，使用video标签自带的loop会导致进度还没更新到结束的时间点就重播
       if (videoLoop) {

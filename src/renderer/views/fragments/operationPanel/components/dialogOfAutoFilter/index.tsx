@@ -18,8 +18,6 @@ function DialogOfAutoFilter(props: PropsWithChildren<Props>) {
   const [isResultDialogOpen, setIsResultDialogOpen] = useState(false)
   const [filterTasksScheduler, setFilterTasksScheduler] = useState<FilterTasksScheduler | null>(null)
 
-  useEffect(() => void(FilterTasksScheduler.cleanCache()), [])
-
   useEffect(() => {
     if (props.isOpen) { return }
     Object.entries(localStore).forEach(([key, value]) => {

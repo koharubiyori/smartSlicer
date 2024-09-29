@@ -12,6 +12,7 @@ import { notify } from '~/utils/notify'
 import classes from './index.module.scss'
 import { ffmpegIpcClient } from 'ipcHub/modules/ffmpeg'
 import md5 from 'md5'
+import { getCachedOutputFilePath } from '~/utils/utils'
 
 export interface Props {
   getRef?: MutableRefObject<any>
@@ -31,6 +32,7 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
   const [logContent, setLogContent] = useState('')
 
   const logTextFieldRef = useRef<HTMLDivElement>(null)
+  const cleanProcessOfSeparateVocalsRef = useRef(() => {})
 
   if (props.getRef) props.getRef.current = {
     show: () => setIsOpen(true),
@@ -69,16 +71,18 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
       setLogContent(prevVal => (prevVal.length !== 0 && prevVal[prevVal.length - 1] !== '\n' ? '\n' : '') +  prevVal + text + '\n')
     }
 
-    const inputFileId = md5(store.main.videoInputPath).substring(0, 6)
-    const inputFileBaseName = path.basename(store.main.videoInputPath).replace(/\..+?$/, '')
-    const audioFilePath = path.join(PREPROCESS_OUTPUT_CACHE_DIR_PATH, inputFileBaseName + '_' + inputFileId + '_audio.wav')
+    const audioFilePath = getCachedOutputFilePath('audio', store.main.videoInputPath)
 
     // get the audio track of the inputted video
     try {
       printLog('开始从视频中分离音频...')
-
       await fsPromise.mkdir(PREPROCESS_OUTPUT_CACHE_DIR_PATH).catch(console.log)
-      await ffmpegIpcClient.video2audio(store.main.videoInputPath, audioFilePath)
+      // use the cached file if the file of audioFilePath exists. the following vocals file as well
+      if (await fsPromise.access(audioFilePath, fsPromise.constants.F_OK).then(() => true).catch(() => false)) {
+        printLog('使用缓存的音频')
+      } else {
+        await ffmpegIpcClient.video2audio(store.main.videoInputPath, audioFilePath)
+      }
     } catch(e: any) {
       printLog(e.toString())
       return
@@ -86,42 +90,56 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
 
     // get the pure vocals from the audio
     printLog('开始从音频中提取人声...')
-    const vocalsAudioPath = await new Promise<string>((resolve) => {
-      const pyShellPort = pythonClient.separateVocals(audioFilePath)
+    const vocalsAudioPath = getCachedOutputFilePath('vocal', store.main.videoInputPath)
+    if (await fsPromise.access(vocalsAudioPath, fsPromise.constants.F_OK).then(() => true).catch(() => false)) {
+      printLog('使用缓存的人声')
+    } else {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const pyShellPort = pythonClient.startWorkerOfSeparateVocals()
 
-      let isLastMsgWithPercent = false
-      let outputFilePath = ''
-      pyShellPort.addEventListener('message', message => {
-        const messageData: OrderMessageOfSeparateVocals.Messages = message.data
-        console.log(messageData)
-        if (messageData.type === 'sendOutputFilePath') {
-          outputFilePath = messageData.filePath
-        }
-        if (messageData.type === 'text') {
-          console.log(messageData.content)
-          setLogContent(prevVal => {
-            let result = ''
-            if (messageData.content.includes('%') && isLastMsgWithPercent) {
-              result = prevVal.replace(/^([\s\S]+\n)[\s\S]+$/, '$1') + messageData.content
-            } else {
-              result = prevVal + messageData.content
+          let isLastMsgWithPercent = false
+          pyShellPort.addEventListener('message', listener)
+          function listener(message: MessageEvent) {
+            const messageData: OrderMessageOfSeparateVocals.Messages = message.data
+            cleanProcessOfSeparateVocalsRef.current = () => {
+              pyShellPort.removeEventListener('message', listener)
+              pyShellPort.postMessage({ type: 'stop' })
+              pyShellPort.close()
             }
-            isLastMsgWithPercent = messageData.content.includes('%')
-            return result
-          })
-        }
-        if (messageData.type === 'close') {
-          printLog('SeparateVocals进程已退出！')
-          resolve(outputFilePath)
-        }
-      })
-      pyShellPort.start()
-    })
-
-    if (vocalsAudioPath === '') {
-      setIsRunning(false)
-      printLog('流程中止')
-      return
+            if (messageData.type === 'success') {
+              resolve()
+              cleanProcessOfSeparateVocalsRef.current()
+            }
+            if (messageData.type === 'error') {
+              reject()
+              cleanProcessOfSeparateVocalsRef.current()
+              printLog(messageData.detail)
+              console.log(messageData.detail)
+            }
+            if (messageData.type === 'text') {
+              console.log(messageData.content)
+              setLogContent(prevVal => {
+                let result = ''
+                if (messageData.content.includes('%') && isLastMsgWithPercent) {
+                  result = prevVal.replace(/^([\s\S]+\n)[\s\S]+$/, '$1') + messageData.content
+                } else {
+                  result = prevVal + messageData.content
+                }
+                isLastMsgWithPercent = messageData.content.includes('%')
+                return result
+              })
+            }
+          }
+          pyShellPort.postMessage({ type: 'separate', payload: { id: vocalsAudioPath, audio: audioFilePath } })
+          pyShellPort.start()
+        })
+      } catch(e: any) {
+        console.log(e)
+        setIsRunning(false)
+        printLog('流程中止')
+        return
+      }
     }
 
     // start to generate srt with the vocals audio
@@ -146,13 +164,13 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
         setLogContent(prevVal => prevVal + 'GenerateSrt进程已退出！\n')
         setIsRunning(false)
 
-        fsPromise.rm(PREPROCESS_OUTPUT_CACHE_DIR_PATH, { recursive: true, force: true })
         fsPromise.stat(subtitleFilePath)
-          .then(stat => {
-            if (stat.size === 0) throw new Error()
+        .then(stat => {
+          if (stat.size === 0) throw new Error()
             store.main.subtitleInputPath = subtitleFilePath
             printLog('字幕文件生成完毕！')
             notify.success('字幕文件生成完毕')
+            fsPromise.rm(PREPROCESS_OUTPUT_CACHE_DIR_PATH, { recursive: true, force: true })
           })
           .catch(() => {
             const fileName = path.basename(subtitleFilePath)
@@ -166,8 +184,8 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
   }
 
   function stop() {
+    cleanProcessOfSeparateVocalsRef.current()
     pythonClient.killCurrentProcessOfGenerateSrt()
-    pythonClient.killCurrentProcessOfSeparateVocals()
     setIsRunning(false)
   }
 
