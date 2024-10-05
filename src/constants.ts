@@ -1,6 +1,6 @@
 import path from 'path'
 
-export const IS_DEV = process.env.NODE_ENV === 'development'
+export const IS_DEV = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true'
 export const FFMPEG_TIME_FORMAT = 'HH:mm:ss.SSS'
 export const WITHOUT_AI = process.env.WITHOUT_AI === 'true'
 

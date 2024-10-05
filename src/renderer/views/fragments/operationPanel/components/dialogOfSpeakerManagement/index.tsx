@@ -69,7 +69,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
     const filePath = path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, speakerId, sampleFileName)
     await new Promise(resolve => {
       audioRef.current!.oncanplay = resolve
-      audioRef.current!.src = filePath
+      audioRef.current!.src = filePath.replaceAll('#', '%23')
     })
 
     audioRef!.current!.play()

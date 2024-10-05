@@ -33,7 +33,6 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
     async () => {
       setTimeout(() => {
         const activeItemInSliceList = tableBodyElRef.current?.querySelector('.MuiTableRow-root[data-selected="true"]')
-        activeItemInSliceList && console.log(isVisibleOnScreen(activeItemInSliceList))
         if (
           activeItemInSliceList &&
           !isVisibleOnScreen(activeItemInSliceList) &&

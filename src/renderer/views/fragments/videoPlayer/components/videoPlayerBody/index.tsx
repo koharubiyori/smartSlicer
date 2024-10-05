@@ -301,7 +301,7 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
         className={classes.activeHint}
       >
         <video
-          src={fullVideoPath}
+          src={fullVideoPath ? fullVideoPath.replaceAll('#', '%23') : undefined}
           preload="auto"
           controls={false}
           onDurationChange={() => {
