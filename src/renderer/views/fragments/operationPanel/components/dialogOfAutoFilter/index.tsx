@@ -7,6 +7,8 @@ import store from '~/store'
 import { notify } from '~/utils/notify'
 import DialogOfFilterResult from './components/dialogOfFilterResult'
 import FilterTasksScheduler from './utils/filterTasksScheduler'
+import { showConfirm } from '~/utils/utils'
+import CachedResultForInferSpeakerSimilarity from '~/utils/cachedResultForInferSpeakerSimilarity'
 
 export interface Props {
   isOpen: boolean
@@ -29,7 +31,7 @@ function DialogOfAutoFilter(props: PropsWithChildren<Props>) {
     })
   }, [props.isOpen])
 
-  function execute() {
+  async function execute() {
     if (store.speakers.sliceListOfSelectedSpeaker.length === 0) return notify.warning('当前切片列表为空')
     if (localStore.workerNum === '') return notify.warning('工作进程数不能为空')
     const speakerList = store.speakers.speakerList
@@ -37,11 +39,15 @@ function DialogOfAutoFilter(props: PropsWithChildren<Props>) {
     const isNoSampledSpeaker = speakerList.every(item => item.voiceSample.length === 0)
     if (isNoSampledSpeaker) return notify.warning('没有已配置声音样本的说话人，如果已经配置请确认是否已启用')
 
+    const useCache = CachedResultForInferSpeakerSimilarity.hasCache ?
+      await showConfirm({ message: '是否要使用之前推理过的缓存结果？', okText: '是', cancelText: '否' }) :
+      false
     const scheduler = new FilterTasksScheduler(
       store.speakers.sliceListOfSelectedSpeaker,
       speakerList,
       { ...localStore, workerNum: parseInt(localStore.workerNum) },
-      store.main.activeSlicesPath
+      store.main.activeSlicesPath,
+      useCache
     )
 
     scheduler.start()

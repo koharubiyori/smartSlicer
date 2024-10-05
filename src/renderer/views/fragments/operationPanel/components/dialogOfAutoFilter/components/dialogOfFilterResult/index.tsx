@@ -15,7 +15,7 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
   const [evaluatedCount, setEvaluatedCount] = useState(0)
   const [speakerResultCounts, setSpeakerResultCounts] = useState<Record<string, number>>({})
   const [logContent, setLogContent] = useState('')
-  const noMatchedText = '无匹配'
+  const notMatchedText = '无匹配'
   const logTextFieldRef = useRef<HTMLDivElement>()
 
   useEffect(() => {
@@ -24,8 +24,8 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
     setEvaluatedCount(0)
     initSpeakerCounts()
     setLogContent('开始筛选...')
-    props.scheduler.onEvaluated = (newVideoSlice, scores, count, originalVideoSlice) => {
-      if (newVideoSlice) {
+    props.scheduler.onEvaluated = (newVideoSlice, scores, count, originalVideoSlice, failed) => {
+      if (newVideoSlice && !failed) {
         store.speakers.emit(newVideoSlice)
         setSpeakerResultCounts(prevVal => ({
           ...prevVal,
@@ -34,11 +34,11 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
       } else {
         setSpeakerResultCounts(prevVal => ({
           ...prevVal,
-          [noMatchedText]: prevVal[noMatchedText] + 1
+          [notMatchedText]: prevVal[notMatchedText] + 1
         }))
       }
 
-      generateLogLine(newVideoSlice, scores, count, originalVideoSlice)
+      generateLogLine(newVideoSlice, scores, count, originalVideoSlice, failed)
       setEvaluatedCount(count)
 
       if (props.scheduler?.sliceList?.length === count) {
@@ -52,25 +52,26 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
   }, [logContent])
 
   function initSpeakerCounts() {
-    const entries = props.scheduler!.speakerList.map(item => [item.name, 0]).concat([[noMatchedText, 0]])
+    const entries = props.scheduler!.speakerList.map(item => [item.name, 0]).concat([[notMatchedText, 0]])
     setSpeakerResultCounts(Object.fromEntries(entries))
   }
 
-  function generateLogLine(newVideoSlice: VideoSlice | null, scores: InferResult[], count: number, originalVideoSlice: VideoSlice) {
+  function generateLogLine(newVideoSlice: VideoSlice | null, scores: InferResult[], count: number, originalVideoSlice: VideoSlice, failed: boolean) {
     const basename = path.basename(originalVideoSlice.filePath)
     const namedScores = scores.reduce((prevVal, item) => {
       prevVal.find(prevValItem => prevValItem.speakerId === item.speakerId)?.scores.push(item.score.toFixed(2)) ??
         prevVal.push({ speakerId: item.speakerId, scores: [item.score.toFixed(2)] })
       return prevVal
     }, [] as { speakerId: string, scores: string[] }[])
-    .map(item => {
-      const speakerName = props.scheduler!.speakerList.find(speakerItem => speakerItem.id === item.speakerId)!.name
-      return `\n${speakerName} [${item.scores.join(', ')}]`
-    })
-    .join('')
+      .map(item => {
+        const speakerName = props.scheduler!.speakerList.find(speakerItem => speakerItem.id === item.speakerId)!.name
+        return `\n${speakerName} [${item.scores.join(', ')}]`
+      })
+      .join('')
 
-    const resultSpeaker = newVideoSlice ? newVideoSlice.speaker : noMatchedText
-    setLogContent(prevVal => prevVal + `\n第${count}个结果(${basename}, ${resultSpeaker})：${namedScores}`)
+    const resultSpeaker = newVideoSlice ? newVideoSlice.speaker : notMatchedText
+    const namedScoresOrError = scores.some(item => item.score !== -1) ? namedScores : '因切片长度小于0.5秒或其他原因导致推理失败'
+    setLogContent(prevVal => prevVal + `\n第${count}个结果(${basename}, ${resultSpeaker})：${namedScoresOrError}`)
   }
 
   return (
