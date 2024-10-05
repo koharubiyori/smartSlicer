@@ -6,7 +6,7 @@ const defaultValue: AutoFilterSettings = {
   computeMethod: 'average',
   isForce: false,
   workerNum: 3,
-  threshold: 0.6
+  threshold: 0.75
 }
 
 const autoFilterPrefs = new PlainPrefs('autoFilter', defaultValue).prefs
