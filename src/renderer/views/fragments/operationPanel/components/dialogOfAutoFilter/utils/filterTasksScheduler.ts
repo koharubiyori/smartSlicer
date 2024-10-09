@@ -110,7 +110,7 @@ class FilterTasksScheduler {
         portSeparateVocals.addEventListener('message', messageHandler)
         function messageHandler(message: MessageEvent) {
           const messageData: OrderMessageOfSeparateVocals.Messages = message.data
-          console.log(messageData)
+          // console.log(messageData)
           const clean = () => portSeparateVocals.removeEventListener('message', messageHandler)
           if (messageData.type === 'success') {
             resolve()

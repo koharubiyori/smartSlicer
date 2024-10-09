@@ -85,7 +85,6 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
   async function removeVideoSample(speakerId: string, sampleFileName: string) {
     if (!await showConfirm({ message: '确定要删除这条样本？' })) { return }
 
-    const filePath = path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, speakerId, sampleFileName)
     const targetSpeaker = localSpeakerList.current.find(item => item.id === speakerId)!
     targetSpeaker.voiceSample = targetSpeaker.voiceSample.filter(item => item !== sampleFileName)
   }
@@ -124,7 +123,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
     const invalidDirList = allDirList.filter(item => !validDirList.includes(item))
 
     await Promise.all(
-      invalidDirList.map(item => fsPromise.rmdir(path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, item), { recursive: true }))
+      invalidDirList.map(item => fsPromise.rm(path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, item), { recursive: true, force: true }))
     )
 
     try {
@@ -134,7 +133,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
           const validFileList = item.voiceSample
           const invalidFileList = allFileList.filter(item => !validFileList.includes(item))
           return invalidFileList.map(fileName =>
-            fsPromise.rm(path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, item.id, fileName))
+            fsPromise.rm(path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, item.id, fileName), { force: true })
           )
         }).flat()
       )

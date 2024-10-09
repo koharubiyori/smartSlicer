@@ -45,6 +45,8 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
         setLogContent(prevVal => prevVal + '\n筛选结束！')
       }
     }
+
+    props.scheduler.start()
   }, [props.scheduler])
 
   useEffect(() => {

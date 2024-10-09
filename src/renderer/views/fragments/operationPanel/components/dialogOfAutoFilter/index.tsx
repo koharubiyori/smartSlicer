@@ -50,7 +50,6 @@ function DialogOfAutoFilter(props: PropsWithChildren<Props>) {
       useCache
     )
 
-    scheduler.start()
     setFilterTasksScheduler(scheduler)
     setIsResultDialogOpen(true)
   }
