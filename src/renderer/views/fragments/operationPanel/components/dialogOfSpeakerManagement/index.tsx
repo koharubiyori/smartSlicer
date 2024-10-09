@@ -58,7 +58,8 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
     for (let item of sampleFilePaths) {
       const baseName = path.basename(item)
       const audioInfo = await ffmpegIpcClient.ffprobe(item)
-      if (audioInfo.format.duration ?? 0 < 0.5) {
+      console.log(audioInfo.format.duration)
+      if ((audioInfo.format.duration ?? 0) < 0.5) {
         return notify.warning(`小于0.5秒的音频不能作为声音样本：${baseName}`)
       }
 
