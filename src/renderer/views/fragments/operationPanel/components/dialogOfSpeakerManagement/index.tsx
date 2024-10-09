@@ -59,8 +59,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
       const baseName = path.basename(item)
       const audioInfo = await ffmpegIpcClient.ffprobe(item)
       if (audioInfo.format.duration ?? 0 < 0.5) {
-        notify.warning(`小于0.5秒的音频不能用于声音样本：${baseName}`)
-        continue
+        return notify.warning(`小于0.5秒的音频不能用于声音样本：${baseName}`)
       }
 
       const targetPath = path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, speakerId, baseName)
