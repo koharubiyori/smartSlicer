@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import path from 'path'
-import ffmpeg from 'fluent-ffmpeg'
+import ffmpeg, { ffprobe, FfprobeData } from 'fluent-ffmpeg'
 import createIpcChannel from '../createIpcChannel'
 import { getGpuList } from '../../ipcHub/utils/utils'
 
@@ -53,6 +53,15 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
         .save(outputFilePath)
         .on('end', resolve as any)
         .on('error', e => reject(e.message))
+    })
+  },
+
+  ffprobe(filePath: string) {
+    return new Promise<FfprobeData>((resolve, reject) => {
+      ffprobe(filePath, (err, data) => {
+        if (err) reject(err)
+        resolve(data)
+      })
     })
   }
 })

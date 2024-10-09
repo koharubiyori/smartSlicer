@@ -148,7 +148,7 @@ class FilterTasksScheduler {
     }
   }
 
-  // if all the scores are -1, the evaluate will be regard as failed (the reason may be the slices are shorter than 0.5 seconds or some error)
+  // if all the scores are -1, the evaluate will be regard as failed (maybe for the slices are shorter than 0.5 seconds or some error)
   async evaluate(filePath: string): Promise<{ speakerId: string | null, scores: InferResult[], failed: boolean }> {
     const returnVal = (speakerId: string | null, scores: InferResult[], failed = false) => ({ speakerId, scores, failed })
 
