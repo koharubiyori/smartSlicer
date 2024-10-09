@@ -5,6 +5,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp'
 import { Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Input, List, ListItem, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material'
 import fsPromise from 'fs/promises'
 import { dialogIpcClient } from 'ipcHub/modules/dialog'
+import { ffmpegIpcClient } from 'ipcHub/modules/ffmpeg'
 import { autorun, makeAutoObservable, observable, toJS } from 'mobx'
 import { Observer } from 'mobx-react-lite'
 import path from 'path'
@@ -56,6 +57,11 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
     const sampleFilePaths = result.filePaths
     for (let item of sampleFilePaths) {
       const baseName = path.basename(item)
+      const audioInfo = await ffmpegIpcClient.ffprobe(item)
+      if (audioInfo.format.duration ?? 0 < 0.5) {
+        return notify.warning(`小于0.5秒的音频不能作为声音样本：${baseName}`)
+      }
+
       const targetPath = path.join(SPEAKER_VOICE_SAMPLES_DIR_PATH, speakerId, baseName)
       await fsPromise.copyFile(item, targetPath)
     }
