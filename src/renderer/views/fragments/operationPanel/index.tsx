@@ -103,11 +103,13 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
       const fileContent = iconv.decode(subtitleFileBuffer, fileEncoding)
       const result = parseTimeRangesFromSubtitle(fileContent, path.extname(store.main.subtitleInputPath).replace('.', '') as any)
 
+      let errorCount = 0  // if the errors are occurred continuously for 5 times, stop all the tasks.
       const limiter = new Bottleneck({
         maxConcurrent: store.main.appSettings.ffmpegWorkingNum,
         rejectOnDrop: false
       })
       result.forEach(async (item, index) => {
+        if (errorCount >= 5) return limiter.stop({ dropWaitingJobs: true })
         limiter.schedule({ id: (index + 1).toString() }, async () => {
           await ffmpegIpcClient.slice({
             originalFilePath: store.main.videoInputPath,
@@ -118,11 +120,13 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
             useGpu: store.main.appSettings.useGpu,
           })
 
+          errorCount = 0
           setVideoSliceDialogParams(prevVal => ({ ...prevVal, completedNumber: prevVal.completedNumber + 1 }))
         })
       })
 
       limiter.on('failed', (error, jobInfo) => {
+        errorCount++
         if (jobInfo.retryCount < 3) {
           notify.warning('切片任务出错，准备重试：' + jobInfo.options.id)
           return 25   // 25毫秒后重试
@@ -137,6 +141,7 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
         loadSlices()
       })
 
+      if (errorCount >= 5) { return notify.error('因连续发生错误，切片任务已停止') }
       setVideoSliceDialogParams({
         isOpen: true,
         completedNumber: 0,
