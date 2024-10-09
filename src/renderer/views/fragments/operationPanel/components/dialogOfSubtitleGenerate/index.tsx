@@ -155,6 +155,7 @@ function DialogOfSubtitleGenerate(props: PropsWithChildren<Props>) {
       const messageData: OrderMessageOfGenerateSrt.Messages = message.data
       if (messageData.type === 'sendOutputFilePath') {
         subtitleFilePath = messageData.filePath
+        fsPromise.rm(subtitleFilePath, { force: true })
       }
       if (messageData.type === 'text') {
         console.log(messageData.content)

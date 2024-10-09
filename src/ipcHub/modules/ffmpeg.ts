@@ -36,6 +36,7 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
       command
         .format(extName)
         .videoCodec(videoCodec)
+        .audioCodec('copy')
         .save(path.join(outputDirPath, `${outputFileName}.${extName}`))
         .addOutputOption('-pix_fmt', 'yuv420p')
         .on('end', resolve)
@@ -49,6 +50,7 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
     return new Promise((resolve, reject) => {
       command
         .noVideo()
+        .audioCodec('pcm_s16le')
         .format('wav')
         .save(outputFilePath)
         .on('end', resolve as any)
