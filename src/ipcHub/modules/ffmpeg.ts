@@ -20,7 +20,7 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
       command.setStartTime(startTime).setDuration(duration)
     }
 
-    const extName = audioOnly ? 'wav' : 'mp4'
+    const extName = audioOnly ? 'wav' : 'mkv'
 
     const videoCodec = await (async () => {
       if (!useGpu) return 'libx264'
@@ -34,9 +34,8 @@ export const ffmpegIpc = createIpcChannel('ffmpeg', {
 
     return new Promise((resolve, reject) => {
       command
-        .format(extName)
         .videoCodec(videoCodec)
-        .audioCodec('copy')
+        .audioCodec('pcm_s16le')
         .save(path.join(outputDirPath, `${outputFileName}.${extName}`))
         .addOutputOption('-pix_fmt', 'yuv420p')
         .on('end', resolve)
