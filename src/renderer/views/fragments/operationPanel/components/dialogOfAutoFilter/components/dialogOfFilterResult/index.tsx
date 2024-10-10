@@ -15,6 +15,7 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
   const [evaluatedCount, setEvaluatedCount] = useState(0)
   const [speakerResultCounts, setSpeakerResultCounts] = useState<Record<string, number>>({})
   const [logContent, setLogContent] = useState('')
+  const [stopped, setStopped] = useState(false)
   const notMatchedText = '无匹配'
   const logTextFieldRef = useRef<HTMLDivElement>()
 
@@ -24,25 +25,21 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
     setEvaluatedCount(0)
     initSpeakerCounts()
     setLogContent('开始筛选...')
-    props.scheduler.onEvaluated = (newVideoSlice, scores, count, originalVideoSlice, failed) => {
-      if (newVideoSlice && !failed) {
-        store.speakers.emit(newVideoSlice)
-        setSpeakerResultCounts(prevVal => ({
-          ...prevVal,
-          [newVideoSlice.speaker!]: prevVal[newVideoSlice.speaker!] + 1
-        }))
-      } else {
-        setSpeakerResultCounts(prevVal => ({
-          ...prevVal,
-          [notMatchedText]: prevVal[notMatchedText] + 1
-        }))
-      }
+    setStopped(false)
+    props.scheduler.onEvaluated = (newVideoSlice, scores, count, originalVideoSlice) => {
+      if (newVideoSlice) store.speakers.emit(newVideoSlice)
+      const speaker = newVideoSlice?.speaker ?? notMatchedText
+      setSpeakerResultCounts(prevVal => ({
+        ...prevVal,
+        [speaker]: prevVal[speaker] + 1
+      }))
 
-      generateLogLine(newVideoSlice, scores, count, originalVideoSlice, failed)
+      generateLogLine(newVideoSlice, scores, count, originalVideoSlice)
       setEvaluatedCount(count)
 
       if (props.scheduler?.sliceList?.length === count) {
         setLogContent(prevVal => prevVal + '\n筛选结束！')
+        setStopped(true)
       }
     }
 
@@ -54,11 +51,14 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
   }, [logContent])
 
   function initSpeakerCounts() {
-    const entries = props.scheduler!.speakerList.map(item => [item.name, 0]).concat([[notMatchedText, 0]])
+    const entries = props.scheduler!.speakerList.map(item => [
+      item.name,
+      item.voiceSample.length === 0 ? -1 : 0  // if there are no voice samples for the speaker, use -1 as a marker
+    ]).concat([[notMatchedText, 0]])
     setSpeakerResultCounts(Object.fromEntries(entries))
   }
 
-  function generateLogLine(newVideoSlice: VideoSlice | null, scores: InferResult[], count: number, originalVideoSlice: VideoSlice, failed: boolean) {
+  function generateLogLine(newVideoSlice: VideoSlice | null, scores: InferResult[], count: number, originalVideoSlice: VideoSlice) {
     const basename = path.basename(originalVideoSlice.filePath)
     const namedScores = scores.reduce((prevVal, item) => {
       prevVal.find(prevValItem => prevValItem.speakerId === item.speakerId)?.scores.push(item.score.toFixed(2)) ??
@@ -71,9 +71,15 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
       })
       .join('')
 
-    const resultSpeaker = newVideoSlice ? newVideoSlice.speaker : notMatchedText
-    const namedScoresOrError = scores.some(item => item.score !== -1) ? namedScores : '因切片长度小于0.5秒或其他原因导致推理失败'
+    const resultSpeaker = newVideoSlice?.speaker ?? notMatchedText
+    const namedScoresOrError = newVideoSlice ? namedScores : '因切片长度小于0.5秒或其他原因导致推理失败'
     setLogContent(prevVal => prevVal + `\n第${count}个结果(${basename}, ${resultSpeaker})：${namedScoresOrError}`)
+  }
+
+  function stop() {
+    props.scheduler!.stop()
+    setStopped(true)
+    setLogContent(prevVal => prevVal + '\n筛选中止！')
   }
 
   return (
@@ -85,7 +91,9 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
       <DialogContent style={{ minWidth: 500 }}>
         <div style={{ columnCount: 4 }}>
           {Object.entries(speakerResultCounts).map(([speakerName, count]) =>
-            <p key={speakerName} style={{ margin: 0, paddingBottom: 10 }}>{speakerName}：{count}</p>
+            <p key={speakerName} style={{ margin: 0, paddingBottom: 10 }}>
+              {speakerName}：{count === -1 ? '无声音样本' : count}
+            </p>
           )}
         </div>
         <div className="flex-row flex-cross-center">
@@ -106,7 +114,11 @@ function DialogOfFilterResult(props: PropsWithChildren<Props>) {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => { props.scheduler!.stop(); props.onCancel() }}>中止并关闭</Button>
+        {stopped ?
+          <Button onClick={() => { props.onCancel() }}>关闭</Button>
+        :
+          <Button onClick={stop}>中止</Button>
+        }
       </DialogActions>
     </Dialog>
   )

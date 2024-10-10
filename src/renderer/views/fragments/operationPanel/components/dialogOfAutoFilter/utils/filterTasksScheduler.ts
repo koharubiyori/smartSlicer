@@ -20,7 +20,7 @@ class FilterTasksScheduler {
   #workerPorts: (WorkerPortClient)[] = []
   #waitingPromises: ((value: WorkerPortClient) => void)[] = []
   #voiceSamples: { speakerId: string, filePath: string }[] = []
-  onEvaluated: (newVideoSlice: VideoSlice | null, result: InferResult[], count: number, originalVideoSlice: VideoSlice, failed: boolean) => void = () => {}
+  onEvaluated: (newVideoSlice: VideoSlice | null, result: InferResult[], count: number, originalVideoSlice: VideoSlice) => void = () => {}
 
   constructor(
     public sliceList: VideoSlice[],
@@ -47,14 +47,18 @@ class FilterTasksScheduler {
     this.sliceList.forEach(async (item, index) => {
       const count = index + 1
       const result = await this.evaluate(item.filePath)
-      if (!result.speakerId) return this.onEvaluated(null, result.scores, count, item, result.failed)
-      const speakerName = this.speakerList.find(item => item.id === result.speakerId)!.name
-      if (speakerName === item.speaker) return this.onEvaluated(item, result.scores, count, item, result.failed)
-      this.onEvaluated({
-        ...item,
-        modified: true,
-        speaker: speakerName
-      }, result.scores, count, item, result.failed)
+      if (!this.#isFailedEvaluate(result.scores)) {
+        if (!result.speakerId) return this.onEvaluated({ ...item, modified: false, speaker: null }, result.scores, count, item)
+        const speakerName = this.speakerList.find(item => item.id === result.speakerId)!.name
+        if (speakerName === item.speaker) return this.onEvaluated(item, result.scores, count, item)
+        this.onEvaluated({
+          ...item,
+          modified: true,
+          speaker: speakerName
+        }, result.scores, count, item)
+      } else {
+        this.onEvaluated(null, result.scores, count, item)
+      }
     })
   }
 
@@ -149,8 +153,8 @@ class FilterTasksScheduler {
   }
 
   // if all the scores are -1, the evaluate will be regard as failed (maybe for the slices are shorter than 0.5 seconds or some error)
-  async evaluate(filePath: string): Promise<{ speakerId: string | null, scores: InferResult[], failed: boolean }> {
-    const returnVal = (speakerId: string | null, scores: InferResult[], failed = false) => ({ speakerId, scores, failed })
+  async evaluate(filePath: string): Promise<{ speakerId: string | null, scores: InferResult[] }> {
+    const returnVal = (speakerId: string | null, scores: InferResult[]) => ({ speakerId, scores })
 
     try {
       if (this.options.evaluateMode === 'quick') {
@@ -160,14 +164,14 @@ class FilterTasksScheduler {
             const result = await this.infer(filePath, item.filePath)
             results.push({ speakerId: item.speakerId, score: result })
             if (result > this.options.threshold) return resolve(item.speakerId)
-            if (index === this.#voiceSamples.length - 1) resolve(null)
+            if (results.length === this.#voiceSamples.length) resolve(null)
           }))
         )
 
-        if (raceResult) return returnVal(raceResult, results, this.#isFailedEvaluate(results))
+        if (raceResult) return returnVal(raceResult, results)
 
         if (this.options.isForce) {
-          return returnVal(results.sort((a, b) => b.score - a.score)[0].speakerId, results, this.#isFailedEvaluate(results))
+          return returnVal(results.sort((a, b) => b.score - a.score)[0].speakerId, results)
         }
 
         return returnVal(null, results)
@@ -181,7 +185,7 @@ class FilterTasksScheduler {
           })
         )
 
-        const returnValWithScores = (speakerId: string | null = null) => returnVal(speakerId, results, this.#isFailedEvaluate(results))
+        const returnValWithScores = (speakerId: string | null = null) => returnVal(speakerId, results)
 
         if (this.options.evaluateMode === 'normal') {
           if (this.options.computeMethod === 'max') {

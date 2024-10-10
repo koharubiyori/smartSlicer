@@ -2,11 +2,11 @@ import { AutoFilterSettings } from '~/views/fragments/operationPanel/components/
 import PlainPrefs from './utils/plainPrefs'
 
 const defaultValue: AutoFilterSettings = {
-  evaluateMode: 'normal',
-  computeMethod: 'average',
+  evaluateMode: 'quick',
+  computeMethod: 'max',
   isForce: false,
   workerNum: 3,
-  threshold: 0.75
+  threshold: 0.5
 }
 
 const autoFilterPrefs = new PlainPrefs('autoFilter', defaultValue).prefs
