@@ -64,13 +64,12 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
   }
 
   return (
-    <TableContainer
-      ref={tableContainerEl as any}
-      component={Paper}
-      style={{ marginTop: 10, height: 'calc(100% - 10px)', overflowY: 'auto' }}
+    <Paper
+      className="flex-column"
+      style={{ marginTop: 10, height: 'calc(100% - 10px)' }}
     >
-      <Observer>{() =>
-        store.main.sliceList !== null ? <>
+      <Observer>{() => <>
+        {store.main.sliceList !== null &&
           <div className="flex-row flex-cross-center" style={{ padding: '5px 10px' }}>
             <Typography>说话人筛选：</Typography>
             <Select fullWidth
@@ -91,38 +90,48 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
               )}
             </Select>
           </div>
-          <Table stickyHeader size="small" style={{ maxHeight: '100%' }}>
-            <TableHead>
-              <TableRow>
-                <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>切片名</TableCell>
-                <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>说话人</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody ref={tableBodyElRef as any}>
-              {store.speakers.sliceListOfSelectedSpeaker.map((item, index) =>
-                <TableRow
-                  key={item.filePath + (item.speaker ?? '')}
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: 'pointer' }}
-                  className={classes.speakerSelected}
-                  data-selected={isItemSelected(item, index)}
-                  onClick={() => {
-                    store.speakers.positionOfSpeakerLists[store.speakers.selectedSpeaker] = index
-                    flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = true
-                  }}
-                >
-                  <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.filePath}</TableCell>
-                  <TableCell align="center" style={{ color: 'var(--text-secondary)', minWidth: '5em' }}>{item.speaker ?? '未指定'}</TableCell>
+        }
+
+        <TableContainer
+          ref={tableContainerEl as any}
+        >
+          {store.main.sliceList !== null ? <>
+            <Table stickyHeader size="small" style={{ maxHeight: '100%' }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>切片名</TableCell>
+                  <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>说话人</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </> :
-          <div className="flex-column flex-center">
-            <SubscriptionsIcon style={{ width: 60, height: 60, fill: 'var(--text-secondary)' }} />
-            <Typography style={{ color: 'var(--text-secondary)', marginTop: 10 }}>还没有视频切片</Typography>
-          </div>
+              </TableHead>
+              <TableBody ref={tableBodyElRef as any}>
+                {store.speakers.sliceListOfSelectedSpeaker.map((item, index) =>
+                  <TableRow
+                    key={item.filePath + (item.speaker ?? '')}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: 'pointer' }}
+                    className={classes.speakerSelected}
+                    data-selected={isItemSelected(item, index)}
+                    onClick={() => {
+                      store.speakers.positionOfSpeakerLists[store.speakers.selectedSpeaker] = index
+                      flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = true
+                    }}
+                  >
+                    <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.filePath}</TableCell>
+                    <TableCell align="center" style={{ color: 'var(--text-secondary)', minWidth: '5em' }}>{item.speaker ?? '未指定'}</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </> :
+            <div className="flex-column flex-center">
+              <SubscriptionsIcon style={{ width: 60, height: 60, fill: 'var(--text-secondary)' }} />
+              <Typography style={{ color: 'var(--text-secondary)', marginTop: 10 }}>还没有视频切片</Typography>
+            </div>
+          }
+        </TableContainer>
+      </>
       }</Observer>
-    </TableContainer>
+    </Paper>
+
   )
 }
 
