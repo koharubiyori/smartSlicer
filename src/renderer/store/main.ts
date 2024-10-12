@@ -44,7 +44,8 @@ export class VideoSlice {
     public filePath: string,
     public speaker: string | null = null,
     public cutRange: [number, number] | null = null,
-    public modified = false
+    public modified = false,
+    public locked: string[] = []   // contain the speaker names for the feature of locking slice list
   ) {}
 }
 

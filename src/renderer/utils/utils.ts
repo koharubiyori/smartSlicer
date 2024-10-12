@@ -27,7 +27,7 @@ export function addEventListener<K extends keyof HTMLElementEventMap>(
   options?: Parameters<typeof document.body.addEventListener>['2']
 ) {
   element.addEventListener(event, listener, options)
-  return () => element.removeEventListener(event, listener)
+  return () => element.removeEventListener(event, listener, options)
 }
 
 export function isVisibleOnScreen(element: Element): boolean {

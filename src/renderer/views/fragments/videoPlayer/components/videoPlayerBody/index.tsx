@@ -1,4 +1,3 @@
-import SettingsOverscanIcon from '@mui/icons-material/SettingsOverscan'
 import LoopIcon from '@mui/icons-material/Loop'
 import MovieIcon from '@mui/icons-material/Movie'
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
@@ -11,10 +10,11 @@ import path from 'path'
 import { MutableRefObject, PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react'
 import useStateWithRef from '~/hooks/useStateWithRef'
 import { VideoSlice } from '~/store/main'
-import { defaultSpeakerShowName } from '~/store/speakers'
+import { SpeakerSelects } from '~/store/speakers'
 import { addEventListener } from '~/utils/utils'
 import classes from './index.module.scss'
 import CssVariablesOfTheme from '~/components/cssVariablesOfTheme'
+import { throttle } from 'throttle-debounce'
 
 export interface Props {
   videoSlice?: VideoSlice
@@ -69,16 +69,16 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
   // --- end ---
 
   useEffect(() => {
-    const unsubscribers = [
-      addEventListener(document.body, 'keydown', (e) => {
-        if (document.activeElement?.tagName === 'INPUT' && document.activeElement.getAttribute('type') === 'text') { return }
-        e.preventDefault()
+    const arrowKeyHandler = throttle(100, (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' && document.activeElement.getAttribute('type') === 'text') { return }
+        if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) { return }
+        e.stopPropagation()
 
-        ;({
+        ;(({
           ArrowUp: () => props.onEmit({
             ...(props.videoSlice as any),
             cutRange: getTrueCutRange(),
-            speaker: defaultSpeakerShowName,
+            speaker: SpeakerSelects.Default,
             modified: true
           }),
           ArrowDown: props.onDrop,
@@ -88,8 +88,11 @@ function VideoPlayerBody(props: PropsWithChildren<Props>) {
             videoElRef.current!.currentTime = 0
             play()
           }
-        }[e.key] ?? (() => {}))()
-      })
+        } as any)[e.key])()
+    })
+
+    const unsubscribers = [
+      addEventListener(document.body, 'keydown', arrowKeyHandler, { capture: true })
     ]
 
     return () => unsubscribers.forEach(item => item())

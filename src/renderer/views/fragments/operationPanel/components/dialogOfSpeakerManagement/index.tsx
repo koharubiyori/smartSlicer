@@ -40,7 +40,7 @@ function DialogOfSpeakerManagement(props: PropsWithChildren<Props>) {
       enabled: true,
       name: '',
       boundKey: '',
-      voiceSample: []
+      voiceSample: [],
     })
   }
 

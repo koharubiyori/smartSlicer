@@ -41,7 +41,6 @@ export default function parseTimeRangesFromSubtitle(subtitleFileContent: string,
 
   if (format === 'ass') {
     const parsedResult = assCompiler.parse(subtitleFileContent)
-    console.log(parsedResult)
     result = parsedResult.events.dialogue
       .map(item => {
         const startTime = Math.round(item.Start * 1000)

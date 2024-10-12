@@ -1,10 +1,12 @@
 import SubscriptionsIcon from '@mui/icons-material/Subscriptions'
-import { MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
+import LockIcon from '@mui/icons-material/Lock'
+import LockOpenIcon from '@mui/icons-material/LockOpen'
+import { IconButton, ListItemText, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material'
 import clsx from 'clsx'
 import { reaction } from 'mobx'
 import { Observer } from 'mobx-react-lite'
 import path from 'path'
-import { PropsWithChildren, useEffect, useRef } from 'react'
+import { PropsWithChildren, useEffect, useRef, useState } from 'react'
 import store from '~/store'
 import { VideoSlice } from '~/store/main'
 import SpeakersStore, { SpeakerSelects } from '~/store/speakers'
@@ -17,13 +19,13 @@ export interface Props {
 
 
 function SliceListFragment(props: PropsWithChildren<Props>) {
-  const flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef = useRef(false)
+  const flagForAutoScrollIntoViewWhenCurrentSelectedSliceChangedByUserRef = useRef(false)
   const tableContainerEl = useRef<HTMLElement>()
   const tableBodyElRef = useRef<HTMLElement>()
 
   // 切换说话人筛选时自动滚动到之前保存的选定说话人的可见位置
   useEffect(() => reaction(
-    () => store.speakers.selectedSpeaker,
+    () => store.speakers.selectedSpeakerName,
     () => setTimeout(scrollIntoViewForActiveSlice)
   ), [])
 
@@ -36,10 +38,10 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
         if (
           activeItemInSliceList &&
           !isVisibleOnScreen(activeItemInSliceList) &&
-          !flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current
+          !flagForAutoScrollIntoViewWhenCurrentSelectedSliceChangedByUserRef.current
         ) scrollIntoViewForActiveSlice()
 
-        flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = false
+        flagForAutoScrollIntoViewWhenCurrentSelectedSliceChangedByUserRef.current = false
       })
     }
   ), [])
@@ -56,16 +58,17 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
 
   function isItemSelected(item: VideoSlice, index: number) {
     const speakerType = SpeakersStore.getSliceSpeakerType(item)
-    const isTypeMatched = store.speakers.selectedSpeaker === SpeakerSelects.All ||
-      speakerType === store.speakers.selectedSpeaker ||
-      item.speaker === store.speakers.selectedSpeaker
+    const isTypeMatched = store.speakers.selectedSpeakerName === SpeakerSelects.All ||
+      speakerType === store.speakers.selectedSpeakerName ||
+      item.speaker === store.speakers.selectedSpeakerName ||
+      store.speakers.selectedSliceListLocked
     const isIndexMatched = index === store.speakers.currentSelectedPosition
     return isTypeMatched && isIndexMatched
   }
 
   return (
     <Paper
-      className="flex-column"
+      className="flex-column flex-center"
       style={{ marginTop: 10, height: 'calc(100% - 10px)' }}
     >
       <Observer>{() => <>
@@ -76,10 +79,10 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
               className={clsx(classes.hideUnderline, 'flex')}
               size="small"
               variant="standard"
-              value={store.speakers.selectedSpeaker}
+              value={store.speakers.selectedSpeakerName}
               color="primary"
               placeholder="全部"
-              onChange={e => store.speakers.selectedSpeaker = e.target.value as any}
+              onChange={e => store.speakers.selectedSpeakerName = e.target.value as any}
             >
               <MenuItem value={SpeakerSelects.All}>全部</MenuItem>
               <MenuItem value={SpeakerSelects.Default}>默认说话人</MenuItem>
@@ -89,10 +92,23 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
                 <MenuItem key={item.id} value={item.name}>{item.name}</MenuItem>
               )}
             </Select>
+            {store.speakers.selectedSpeakerName !== SpeakerSelects.All &&
+              <IconButton
+                style={{ marginRight: -5, padding: 3 }}
+                onClick={() => store.speakers.toggleSliceListLock(store.speakers.selectedSpeakerName)}
+              >
+                {store.speakers.isSliceListLocked(store.speakers.selectedSpeakerName) ?
+                  <LockIcon sx={{ fontSize: 18 }}></LockIcon>
+                :
+                  <LockOpenIcon sx={{ fontSize: 18 }}></LockOpenIcon>
+                }
+              </IconButton>
+            }
           </div>
         }
 
         <TableContainer
+          className="flex"
           ref={tableContainerEl as any}
         >
           {store.main.sliceList !== null ? <>
@@ -104,19 +120,21 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
                 </TableRow>
               </TableHead>
               <TableBody ref={tableBodyElRef as any}>
-                {store.speakers.sliceListOfSelectedSpeaker.map((item, index) =>
+                {store.speakers.lockedOrNotSliceList.map((item, index) =>
                   <TableRow
                     key={item.filePath + (item.speaker ?? '')}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: 'pointer' }}
                     className={classes.speakerSelected}
                     data-selected={isItemSelected(item, index)}
                     onClick={() => {
-                      store.speakers.positionOfSpeakerLists[store.speakers.selectedSpeaker] = index
-                      flagOfCurrentSelectedSliceChangedByUserForAutoScrollIntoViewRef.current = true
+                      store.speakers.positionsOfLockedOrNotSliceList[store.speakers.selectedSpeakerName] = index
+                      flagForAutoScrollIntoViewWhenCurrentSelectedSliceChangedByUserRef.current = true
                     }}
                   >
                     <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.filePath}</TableCell>
-                    <TableCell align="center" style={{ color: 'var(--text-secondary)', minWidth: '5em' }}>{item.speaker ?? '未指定'}</TableCell>
+                    <TableCell align="center" style={{ color: 'var(--text-secondary)', minWidth: '5em' }}>{
+                      item.speaker === SpeakerSelects.Default ? '默认说话人' : item.speaker ?? '未指定'
+                    }</TableCell>
                   </TableRow>
                 )}
               </TableBody>
