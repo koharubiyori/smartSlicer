@@ -111,8 +111,8 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
           className="flex"
           ref={tableContainerEl as any}
         >
-          {store.main.sliceList !== null ? <>
-            <Table stickyHeader size="small" style={{ maxHeight: '100%' }}>
+          {store.speakers.lockedOrNotSliceList.length !== 0 ? <>
+            <Table stickyHeader size="small" style={{ maxHeight: '100%', tableLayout: 'fixed' }}>
               <TableHead>
                 <TableRow>
                   <TableCell align="center" style={{ color: 'var(--text-secondary)', background: 'var(--background-paper)' }}>切片名</TableCell>
@@ -131,7 +131,9 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
                       flagForAutoScrollIntoViewWhenCurrentSelectedSliceChangedByUserRef.current = true
                     }}
                   >
-                    <TableCell align="center" style={{ color: 'var(--text-secondary)' }}>{item.filePath}</TableCell>
+                    <TableCell align="center" style={{ color: 'var(--text-secondary)', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                      {item.filePath}
+                    </TableCell>
                     <TableCell align="center" style={{ color: 'var(--text-secondary)', minWidth: '5em' }}>{
                       item.speaker === SpeakerSelects.Default ? '默认说话人' : item.speaker ?? '未指定'
                     }</TableCell>
@@ -140,7 +142,7 @@ function SliceListFragment(props: PropsWithChildren<Props>) {
               </TableBody>
             </Table>
           </> :
-            <div className="flex-column flex-center">
+            <div className="flex-column flex-center" style={{ backgroundColor: store.main.sliceList !== null ? 'var(--background-paper)' : 'transparent' }}>
               <SubscriptionsIcon style={{ width: 60, height: 60, fill: 'var(--text-secondary)' }} />
               <Typography style={{ color: 'var(--text-secondary)', marginTop: 10 }}>还没有视频切片</Typography>
             </div>
