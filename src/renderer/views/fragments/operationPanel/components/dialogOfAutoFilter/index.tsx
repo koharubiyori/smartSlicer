@@ -43,7 +43,7 @@ function DialogOfAutoFilter(props: PropsWithChildren<Props>) {
       await showConfirm({ message: '是否要使用之前推理过的缓存结果？', okText: '是', cancelText: '否' }) :
       false
     const scheduler = new FilterTasksScheduler(
-      store.speakers.sliceListOfSelectedSpeaker,
+      store.speakers.lockedOrNotSliceList,
       speakerList,
       { ...localStore, workerNum: parseInt(localStore.workerNum) },
       store.main.activeSlicesPath,

@@ -22,6 +22,7 @@ import DialogOfSpeakerManagement from './components/dialogOfSpeakerManagement'
 import DialogOfSubtitleGenerate, { DialogOfSubtitleGenerateRef } from './components/dialogOfSubtitleGenerate'
 import DialogOfVideoSlice, { Props as DialogPropsOfVideoSlice } from './components/dialogOfVideoSlice'
 import { loadSlices as execLoadSlices, saveProjectFile } from './utils/loadSlices'
+import { SpeakerSelects } from '~/store/speakers'
 
 export interface Props {
 
@@ -177,7 +178,8 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
   async function output() {
     if (store.main.outputPath === '') return notify.warning('最终输出路径不能为空')
     const namedSliceList = store.main.sliceList?.filter(item => item.speaker)
-    const speakerNames = new Set(namedSliceList?.map(item => item.speaker))
+    const replaceDefaultSpeakerName = (speakerName: string) => speakerName === SpeakerSelects.Default ? '默认说话人' : speakerName
+    const speakerNames = new Set(namedSliceList?.map(item => replaceDefaultSpeakerName(item.speaker!)))
     if (namedSliceList == null || speakerNames.size === 0) return notify.warning('没有可输出的结果')
     globalBackdropRef.show()
     for (let item of speakerNames) await fsPromise.mkdir(path.join(store.main.outputPath, item!)).catch(() => {})
@@ -189,7 +191,8 @@ function OperationPanelFragment(props: PropsWithChildren<Props>) {
 
     namedSliceList.forEach(item => {
       limiter.schedule(() => {
-        const outputDirPath = path.join(store.main.outputPath, item.speaker!)
+        console.log(item.speaker)
+        const outputDirPath = path.join(store.main.outputPath, replaceDefaultSpeakerName(item.speaker!))
         return ffmpegIpcClient.slice({
           originalFilePath: path.join(store.main.activeSlicesPath, item.filePath),
           outputDirPath,
