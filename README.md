@@ -7,8 +7,6 @@
 ### 安装
 
 1. 下载软件：[Github Releases](https://github.com/koharubiyori/smartSlicer/releases)
-1. 下载环境包：https://pan.baidu.com/s/1Mi7286XLHlKEuGpBD12qcQ?pwd=imp3
-1. 将环境包解压至软件根目录内
 
 如不使用AI功能，可以下载无需环境包的without-ai版本。
 
